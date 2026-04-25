@@ -16,7 +16,7 @@ import {
   PlusCircle,
   Globe,
   Building2,
-  Laptop
+  BadgeCheck
 } from 'lucide-react';
 
 import Link from 'next/link';
@@ -25,50 +25,50 @@ import AdUnit from '@/components/ads/AdUnit';
 const AuthModal = dynamic(() => import('@/components/AuthModal'), { ssr: false });
 const RecruiterAuthModal = dynamic(() => import('@/components/RecruiterAuthModal'), { ssr: false });
 
-const TIER_1_COUNTRIES = [
-  { name: 'United States', slug: 'usa', info: 'New York, San Francisco, Austin, Remote' },
-  { name: 'United Kingdom', slug: 'uk', info: 'London, Manchester, Birmingham, Remote' },
-  { name: 'Canada', slug: 'canada', info: 'Toronto, Vancouver, Montreal, Remote' },
-  { name: 'Australia', slug: 'australia', info: 'Sydney, Melbourne, Brisbane, Remote' },
-  { name: 'Germany', slug: 'germany', info: 'Berlin, Munich, Hamburg, Remote' },
-  { name: 'Ireland', slug: 'ireland', info: 'Dublin, Cork, Limerick, Remote' },
+const GCC_REGIONS = [
+  { name: 'United Arab Emirates', slug: 'uae', cities: 'Dubai, Abu Dhabi, Sharjah, Ajman' },
+  { name: 'Saudi Arabia', slug: 'saudi-arabia', cities: 'Riyadh, Jeddah, Dammam, NEOM' },
+  { name: 'Qatar', slug: 'qatar', cities: 'Doha, Lusail, Al Wakrah' },
+  { name: 'Kuwait', slug: 'kuwait', cities: 'Kuwait City, Al Ahmadi' },
+  { name: 'Oman', slug: 'oman', cities: 'Muscat, Salalah, Sohar' },
+  { name: 'Bahrain', slug: 'bahrain', cities: 'Manama, Riffa' },
 ];
 
-const GLOBAL_INDUSTRIES = [
-  { title: 'Software Engineering', slug: 'software-engineering' },
-  { title: 'Artificial Intelligence', slug: 'ai' },
-  { title: 'Data Science', slug: 'data-science' },
-  { title: 'Cybersecurity', slug: 'cybersecurity' },
-  { title: 'Digital Marketing', slug: 'marketing' },
-  { title: 'Product Management', slug: 'product' },
-  { title: 'Cloud Computing', slug: 'cloud' },
-  { title: 'Healthcare & Biotech', slug: 'healthcare' },
-  { title: 'Finance & Fintech', slug: 'finance' },
-  { title: 'Renewable Energy', slug: 'energy' },
-  { title: 'E-commerce', slug: 'ecommerce' },
+const GULF_INDUSTRIES = [
+  { title: 'Oil & Gas', slug: 'oil-and-gas' },
+  { title: 'Construction', slug: 'construction' },
+  { title: 'Civil Engineering', slug: 'civil-engineering' },
+  { title: 'Hospitality', slug: 'hospitality' },
+  { title: 'Tourism', slug: 'tourism' },
+  { title: 'Healthcare', slug: 'healthcare' },
+  { title: 'Nursing', slug: 'nursing' },
+  { title: 'Banking', slug: 'banking' },
+  { title: 'Fintech', slug: 'fintech' },
+  { title: 'Aviation', slug: 'aviation' },
   { title: 'Logistics', slug: 'logistics' },
-  { title: 'Education Technology', slug: 'edtech' },
-  { title: 'Business Development', slug: 'sales' },
-  { title: 'UX/UI Design', slug: 'design' },
-  { title: 'Human Resources', slug: 'hr' },
+  { title: 'Digital Marketing', slug: 'marketing' },
+  { title: 'Software Development', slug: 'software' },
+  { title: 'Cybersecurity', slug: 'cybersecurity' },
+  { title: 'Education', slug: 'education' },
+  { title: 'Real Estate', slug: 'real-estate' },
 ];
 
-const GLOBAL_FAQS = [
+const GULF_FAQS = [
   {
-    question: "Does JobMeter list remote-only positions?",
-    answer: "Yes! A significant portion of our global listings are 100% remote or hybrid-friendly, allowing you to work for Tier 1 companies from anywhere in the world."
+    question: "Do I need a work visa to work in the Gulf?",
+    answer: "Yes. Most employers in the UAE, Saudi Arabia, and Qatar provide full visa sponsorship and entry permits for international hires."
   },
   {
-    question: "Do companies on JobMeter provide visa sponsorship?",
-    answer: "Many international employers in the US, UK, and Canada offer H1-B, Skilled Worker, or Global Talent visa sponsorships for high-demand roles."
+    question: "Are salaries in the GCC tax-free?",
+    answer: "Yes, GCC countries generally do not levy personal income tax on employment earnings, allowing you to keep your full gross salary."
   },
   {
-    question: "How do I find high-paying international roles?",
-    answer: "Use our search filters to sort by Tier 1 countries or specific sectors like AI, Fintech, and Engineering where global compensation is highest."
+    question: "What benefits are typical in Gulf job offers?",
+    answer: "Many offers include a basic salary plus allowances for housing, transportation, and annual flight tickets to your home country."
   }
 ];
 
-export default function GlobalHomePage({ jobs = [] }: { jobs: any[] }) {
+export default function GulfHomePage({ jobs = [] }: { jobs: any[] }) {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [authModalOpen, setAuthModalOpen] = useState(false);
@@ -83,22 +83,22 @@ export default function GlobalHomePage({ jobs = [] }: { jobs: any[] }) {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* ── HERO SECTION: Slate Gradient ── */}
+      {/* ── HERO SECTION: Reverted to Gradient, No Image ── */}
       <section className="relative px-6 py-16 md:py-24 bg-slate-900 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-indigo-900/20 to-slate-900" />
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900/20 to-slate-900" />
         
         <div className="max-w-5xl mx-auto relative z-10 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 mb-8 text-sm">
-            <Globe size={14} /> Global Talent Marketplace & Career Platform
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 mb-8 text-sm">
+            <Sparkles size={14} /> AI-Powered Job Matching for the Middle East
           </div>
           
           <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-6 tracking-tight">
-            Build Your Career <br />
-            <span style={{ color: theme.colors.primary.DEFAULT }}>On a Global Scale</span>
+            Find Your Career <br />
+            <span style={{ color: theme.colors.primary.DEFAULT }}>Opportunity in the Gulf</span>
           </h1>
           
           <p className="text-lg text-gray-400 mb-10 max-w-2xl mx-auto">
-            Find remote-first roles and international opportunities in the US, UK, Canada, and Europe. Work with world-class companies.
+            Connect with top employers in UAE, Saudi Arabia, and Qatar. Tax-free salaries and global career growth.
           </p>
 
           <form onSubmit={handleSearch} className="max-w-2xl mx-auto mb-10">
@@ -107,7 +107,7 @@ export default function GlobalHomePage({ jobs = [] }: { jobs: any[] }) {
                 <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                 <input
                   type="text"
-                  placeholder="e.g. Software Engineer, Accountant..."
+                  placeholder="e.g. Accountant, Civil Engineer..."
                   className="w-full pl-12 pr-4 py-4 rounded-xl bg-white text-gray-900 focus:outline-none"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -117,28 +117,28 @@ export default function GlobalHomePage({ jobs = [] }: { jobs: any[] }) {
                 type="submit"
                 className="bg-blue-600 text-white px-8 py-4 rounded-xl font-bold hover:bg-blue-700 transition-all"
               >
-                Find Jobs
+                Search Jobs
               </button>
             </div>
           </form>
 
           <div className="flex flex-wrap justify-center gap-6 text-gray-400 text-sm">
-            <div className="flex items-center gap-2"><CheckCircle size={16} className="text-green-500" /> Fortune 500 Companies</div>
-            <div className="flex items-center gap-2"><Laptop size={16} className="text-indigo-500" /> Remote-First Options</div>
+            <div className="flex items-center gap-2"><CheckCircle size={16} className="text-green-500" /> Verified Employers</div>
+            <div className="flex items-center gap-2"><Shield size={16} className="text-blue-500" /> Visa Sponsorship</div>
           </div>
         </div>
       </section>
 
       {/* ── AD 1 ── */}
       <div className="max-w-6xl mx-auto px-6 py-8">
-        <AdUnit slot="GLOBAL_TOP_BANNER" format="auto" />
+        <AdUnit slot="4198231153" format="auto" />
       </div>
 
-      {/* ── FEATURED GLOBAL JOBS ── */}
+      {/* ── FEATURED JOBS ── */}
       <section className="py-12 bg-white">
         <div className="max-w-6xl mx-auto px-6">
           <div className="flex justify-between items-center mb-8">
-            <h2 className="text-2xl font-bold text-gray-900">Featured Global Roles</h2>
+            <h2 className="text-2xl font-bold text-gray-900">Featured Gulf Jobs</h2>
             <Link href="/jobs" className="text-blue-600 font-semibold flex items-center gap-1">
               View All <ArrowRight size={16} />
             </Link>
@@ -146,38 +146,35 @@ export default function GlobalHomePage({ jobs = [] }: { jobs: any[] }) {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {jobs.slice(0, 6).map((job: any) => (
               <Link key={job.id} href={`/jobs/${job.slug}`} className="p-6 rounded-2xl border border-gray-200 hover:border-blue-500 transition-all shadow-sm">
-                <h3 className="font-bold text-gray-900 mb-1 line-clamp-1">{job.title}</h3>
-                <p className="text-sm text-gray-500 mb-4">{job.company?.name || 'Global Enterprise'}</p>
-                <div className="flex justify-between items-center">
-                  <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded uppercase">
-                    {job.location?.name || 'International'}
-                  </span>
-                  <span className="text-[10px] text-gray-400 font-medium">Just posted</span>
-                </div>
+                <h3 className="font-bold text-gray-900 mb-1">{job.title}</h3>
+                <p className="text-sm text-gray-500 mb-4">{job.company?.name || 'Top Employer'}</p>
+                <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded uppercase">
+                  {job.location?.name || 'GCC Region'}
+                </span>
               </Link>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── NEW LINE: JOBS BY TIER 1 COUNTRY ── */}
+      {/* ── NEW LINE: JOBS BY GCC COUNTRY ── */}
       <section className="py-12 bg-gray-50 border-y border-gray-100">
         <div className="max-w-6xl mx-auto px-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center md:text-left">Jobs by Tier 1 Country</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-8">Jobs by GCC Country</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {TIER_1_COUNTRIES.map((country) => (
+            {GCC_REGIONS.map((region) => (
               <Link 
-                key={country.slug}
-                href={`/jobs?search=${country.name}`}
+                key={region.slug}
+                href={`/jobs?search=${region.name}`}
                 className="p-6 bg-white rounded-xl border border-gray-200 hover:shadow-md transition-all group"
               >
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                  <div className="p-2 bg-blue-50 rounded-lg text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                     <Globe size={20} />
                   </div>
-                  <h3 className="font-bold text-gray-900">{country.name}</h3>
+                  <h3 className="font-bold text-gray-900">{region.name}</h3>
                 </div>
-                <p className="text-xs text-gray-500 ml-11">{country.info}</p>
+                <p className="text-xs text-gray-500 ml-11">{region.cities}</p>
               </Link>
             ))}
           </div>
@@ -186,19 +183,19 @@ export default function GlobalHomePage({ jobs = [] }: { jobs: any[] }) {
 
       {/* ── AD 2 ── */}
       <div className="max-w-6xl mx-auto px-6 py-8">
-        <AdUnit slot="GLOBAL_MID_BANNER" format="fluid" layout="in-article" />
+        <AdUnit slot="4690286797" format="fluid" layout="in-article" />
       </div>
 
-      {/* ── NEW LINE: TOP GLOBAL INDUSTRIES ── */}
+      {/* ── NEW LINE: TOP GULF INDUSTRIES ── */}
       <section className="py-12 bg-white">
         <div className="max-w-6xl mx-auto px-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center md:text-left">Top Global Industries</h2>
-          <div className="flex flex-wrap gap-3 justify-center md:justify-start">
-            {GLOBAL_INDUSTRIES.map((ind) => (
+          <h2 className="text-2xl font-bold text-gray-900 mb-8">Top Gulf Industries</h2>
+          <div className="flex flex-wrap gap-3">
+            {GULF_INDUSTRIES.map((ind) => (
               <Link 
                 key={ind.slug}
                 href={`/jobs?search=${ind.title}`}
-                className="px-5 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all"
+                className="px-5 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all"
               >
                 {ind.title}
               </Link>
@@ -207,16 +204,16 @@ export default function GlobalHomePage({ jobs = [] }: { jobs: any[] }) {
         </div>
       </section>
 
-      {/* ── GLOBAL FAQ ── */}
+      {/* ── FAQ ── */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-3xl mx-auto px-6">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-10">Global Search FAQ</h2>
+          <h2 className="text-3xl font-bold text-center text-gray-900 mb-10">Common Questions</h2>
           <div className="space-y-4">
-            {GLOBAL_FAQS.map((faq, i) => (
+            {GULF_FAQS.map((faq, i) => (
               <details key={i} className="group bg-white rounded-xl border border-gray-200">
                 <summary className="flex justify-between items-center p-6 cursor-pointer font-bold text-gray-900 list-none">
                   {faq.question}
-                  <PlusCircle size={20} className="text-indigo-600 group-open:rotate-45 transition-all" />
+                  <PlusCircle size={20} className="text-blue-600 group-open:rotate-45 transition-all" />
                 </summary>
                 <div className="px-6 pb-6 text-sm text-gray-600 border-t border-gray-50 pt-4">
                   {faq.answer}
@@ -229,7 +226,7 @@ export default function GlobalHomePage({ jobs = [] }: { jobs: any[] }) {
 
       <footer className="bg-slate-900 text-gray-400 py-12">
         <div className="max-w-6xl mx-auto px-6 text-center">
-          <p className="text-sm mb-4">© 2026 JobMeter Global. Your gateway to international careers.</p>
+          <p className="text-sm mb-4">© 2026 JobMeter Gulf. Tax-free careers in the Middle East.</p>
           <div className="flex justify-center gap-6 text-xs font-medium">
             <Link href="/privacy" className="hover:text-white">Privacy</Link>
             <Link href="/terms" className="hover:text-white">Terms</Link>
