@@ -86,7 +86,7 @@ export default function ApplyForMePage() {
     {
       icon: <FileText className="w-6 h-6" />,
       number: "01",
-      title: "Register on JobMeter.app",
+      title: "Register on gulf.jobmeter.app",
       desc: "Create your free account. Upload your CV and set your job preferences, target roles, location, and salary expectations. That profile is all we need."
     },
     {
@@ -128,7 +128,7 @@ export default function ApplyForMePage() {
   const faqs = [
     {
       q: "How do I get started?",
-      a: "Register on JobMeter.app and complete your profile. Then click the payment button. Once payment is confirmed, we'll reach out within 24 hours — first applications go out within 48 hours of onboarding."
+      a: "Register on gulf.jobmeter.app and complete your profile. Then click the payment button. Once payment is confirmed, we'll reach out within 24 hours — first applications go out within 48 hours of onboarding."
     },
     {
       q: "How does the Gmail work?",

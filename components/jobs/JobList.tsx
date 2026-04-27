@@ -34,37 +34,27 @@ const AD_SLOTS = {
 } as const;
 // ─────────────────────────────────────────────────────────────────────────────
 
-// ── Site-specific job filter helpers ─────────────────────────────────────────
-const GULF_COUNTRIES = ['uae', 'saudi arabia', 'kuwait', 'qatar', 'bahrain', 'oman', 'jordan', 'egypt', 'lebanon'];
-function getJobCountries(job: any): string[] { return (job.country || []).map((c: string) => c.toLowerCase()); }
-function isJobRemote(job: any): boolean { const loc = job.location; if (!loc) return false; if (typeof loc === 'string') return loc.toLowerCase().includes('remote'); if (typeof loc === 'object') return Boolean(loc.remote); return false; }
-function filterForGulf(job: any): boolean {
-  const countries = getJobCountries(job);
-  const hasGulfCountry = countries.some((c: string) => GULF_COUNTRIES.includes(c));
-  // Include if tagged with a gulf country
-  if (hasGulfCountry) return true;
-  // Remote jobs only if tagged with a gulf country
-  if (isJobRemote(job)) return countries.some((c: string) => GULF_COUNTRIES.includes(c));
-  return false;
-}
-// ─────────────────────────────────────────────────────────────────────────────
+// Worker handles site filtering via ?site=gulf
 
-const STORAGE_KEYS = {
-  SAVED_JOBS: 'saved_jobs',
-  APPLIED_JOBS: 'applied_jobs',
-  LATEST_JOBS_CACHE: 'latest_jobs_cache',
-  LATEST_JOBS_CACHE_TS: 'latest_jobs_cache_ts',
-  LATEST_JOBS_CACHE_VERSION: 'latest_jobs_cache_version',
-  MATCHES_CACHE: 'jobs_cache',
-  MATCHES_CACHE_TS: 'jobs_cache_timestamp',
-  MATCHES_CACHE_USER: 'jobs_cache_user_id',
-};
+function getSiteKeys(site: string) {
+  return {
+    SAVED_JOBS: 'saved_jobs',
+    APPLIED_JOBS: 'applied_jobs',
+    LATEST_JOBS_CACHE: `${site}_latest_jobs_cache`,
+    LATEST_JOBS_CACHE_TS: `${site}_latest_jobs_cache_ts`,
+    LATEST_JOBS_CACHE_VERSION: `${site}_latest_jobs_cache_version`,
+    MATCHES_CACHE: `${site}_jobs_cache`,
+    MATCHES_CACHE_TS: `${site}_jobs_cache_timestamp`,
+    MATCHES_CACHE_USER: `${site}_jobs_cache_user_id`,
+  };
+}
 
 const JOBS_PER_PAGE_DISPLAY = 50;
 const CLIENT_CACHE_DURATION = 20 * 60 * 1000;            // 20 min — latest jobs
 const MATCHES_CACHE_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days — match scores
 
 interface JobListProps {
+  siteType?: 'nigeria' | 'gulf' | 'global';
   initialJobs?: any[];
   initialCountry?: string;
   initialRoleCategory?: string;
@@ -119,18 +109,17 @@ function transformJobToUIStatic(job: any): JobUI {
   };
 }
 
-export default function JobList({ initialJobs, initialCountry, initialRoleCategory, initialJobType, initialState, initialTown }: JobListProps) {
+export default function JobList({ siteType = 'gulf', initialJobs, initialCountry, initialRoleCategory, initialJobType, initialState, initialTown }: JobListProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const STORAGE_KEYS = getSiteKeys(siteType);
 
   const [activeTab, setActiveTab] = useState<'latest' | 'matches'>('latest');
 
   // ── Latest tab state ────────────────────────────────────────────────────────
-  const [latestJobs, setLatestJobs] = useState<JobUI[]>(() =>
-    initialJobs ? initialJobs.map(j => transformJobToUIStatic(j)) : []
-  );
-  const [latestJobsLoading, setLatestJobsLoading] = useState(!initialJobs);
+  const [latestJobs, setLatestJobs] = useState<JobUI[]>([]);
+  const [latestJobsLoading, setLatestJobsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
 
   // ── Matches tab state ───────────────────────────────────────────────────────
@@ -492,7 +481,7 @@ export default function JobList({ initialJobs, initialCountry, initialRoleCatego
         const sessionTimestamp = sessionStorage.getItem(STORAGE_KEYS.LATEST_JOBS_CACHE_TS);
         const sessionVersion = sessionStorage.getItem(STORAGE_KEYS.LATEST_JOBS_CACHE_VERSION);
 
-        if (sessionCached && sessionTimestamp) {
+        if (sessionCached && sessionTimestamp && sessionVersion === siteType) {
           const age = Date.now() - parseInt(sessionTimestamp, 10);
           if (age < CLIENT_CACHE_DURATION) {
             try {
@@ -505,22 +494,21 @@ export default function JobList({ initialJobs, initialCountry, initialRoleCatego
         }
       }
 
-      const JOBS_API_URL = process.env.NEXT_PUBLIC_JOBS_API_URL || 'https://jobs-api.joevicspro.workers.dev';
+      const JOBS_API_URL = 'https://jobs-api.joevicspro.workers.dev/jobs-gulf';
       const res = await fetch(JOBS_API_URL);
       if (!res.ok) throw new Error(`Jobs API error: ${res.status}`);
       const { jobs: allData, cacheVersion } = await res.json();
 
       const allData_raw = (allData || []);
-      // Gulf site: only Gulf-country jobs + remote jobs tagged with Gulf countries
-      const gulfJobs = allData_raw.filter((job: any) => filterForGulf(job));
-      const allUiJobs = gulfJobs.map((job: any) => transformJobToUI(job, 0, null));
+      // Worker already filtered by ?site=gulf
+      const allUiJobs = allData_raw.map((job: any) => transformJobToUI(job, 0, null));
       setLatestJobs(allUiJobs);
       setCurrentPage(1);
 
       try {
         sessionStorage.setItem(STORAGE_KEYS.LATEST_JOBS_CACHE, JSON.stringify(allUiJobs));
         sessionStorage.setItem(STORAGE_KEYS.LATEST_JOBS_CACHE_TS, Date.now().toString());
-        if (cacheVersion) sessionStorage.setItem(STORAGE_KEYS.LATEST_JOBS_CACHE_VERSION, cacheVersion);
+        sessionStorage.setItem(STORAGE_KEYS.LATEST_JOBS_CACHE_VERSION, siteType);
       } catch (e) {
         console.warn('[JobList] sessionStorage write failed:', e);
       }
@@ -553,13 +541,12 @@ export default function JobList({ initialJobs, initialCountry, initialRoleCatego
         } catch { }
       }
 
-      const JOBS_API_URL = process.env.NEXT_PUBLIC_JOBS_API_URL || 'https://jobs-api.joevicspro.workers.dev';
+      const JOBS_API_URL = 'https://jobs-api.joevicspro.workers.dev/jobs-gulf';
       const res = await fetch(JOBS_API_URL);
       if (!res.ok) throw new Error(`Jobs API error: ${res.status}`);
       const { jobs: data } = await res.json();
-      // Gulf site: only Gulf-country jobs + remote jobs tagged with Gulf countries
-      const gulfData = (data || []).filter((job: any) => filterForGulf(job));
-      const processedJobs = await processJobsWithMatching(gulfData);
+      // Worker already filtered by ?site=gulf
+      const processedJobs = await processJobsWithMatching(data || []);
       processedJobs.sort((a, b) => (b.calculatedTotal || 0) - (a.calculatedTotal || 0));
 
       try {
@@ -585,8 +572,7 @@ export default function JobList({ initialJobs, initialCountry, initialRoleCatego
     if (!authChecked) return;
     if (latestFetchedRef.current) return;
     latestFetchedRef.current = true;
-    if (initialJobs && initialJobs.length > 0) return;
-    fetchLatestJobs();
+    fetchLatestJobs(); // always fetch from https://jobs-api.joevicspro.workers.dev/jobs-gulf
   }, [authChecked]);
 
   // ── Fetch matches trigger ───────────────────────────────────────────────────
@@ -808,6 +794,7 @@ export default function JobList({ initialJobs, initialCountry, initialRoleCatego
           const loc = jobLoc as Record<string, unknown>;
           locationMatch = String(loc.city || '').toLowerCase().includes(query) || String(loc.state || '').toLowerCase().includes(query) || String(loc.country || '').toLowerCase().includes(query);
         }
+        // Also match against job.country array
         if (!titleMatch && !companyMatch && !descriptionMatch && !locationMatch) return false;
       }
 
@@ -921,7 +908,7 @@ export default function JobList({ initialJobs, initialCountry, initialRoleCatego
   return (
     <>
       <OrganizationSchema />
-      <WebSiteSchema searchAction={{ target: 'https://www.jobmeter.app/?q={search_term_string}', queryInput: 'required name=search_term_string' }} />
+      <WebSiteSchema searchAction={{ target: 'https://jobmeter.app/?q={search_term_string}', queryInput: 'required name=search_term_string' }} />
 
       <div className="min-h-screen" style={{ backgroundColor: theme.colors.background.muted }}>
 
@@ -1073,7 +1060,7 @@ export default function JobList({ initialJobs, initialCountry, initialRoleCatego
               <input type="text" placeholder="Search by job title, company, location, or keywords..." value={filters.search}
                 onChange={(e) => {
                   const v = e.target.value;
-                  setFilters(prev => ({ ...prev, search: v })); setSearchQuery(v);
+                  setFilters(prev => ({ ...prev, country: v }));
                   setFilteredSuggestions(getSuggestions(v)); setShowSuggestions(v.length > 0);
                   const params = new URLSearchParams(searchParams.toString());
                   v ? params.set('search', v) : params.delete('search');
@@ -1086,7 +1073,7 @@ export default function JobList({ initialJobs, initialCountry, initialRoleCatego
               />
               <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 z-10">
                 {filters.search && (
-                  <button onClick={() => { setFilters(prev => ({ ...prev, search: '' })); setSearchQuery(''); const params = new URLSearchParams(searchParams.toString()); params.delete('search'); router.replace(params.toString() ? `${pathname}?${params.toString()}` : pathname); }} className="p-1.5 hover:bg-gray-100 rounded-full transition-all">
+                  <button onClick={() => { setFilters(prev => ({ ...prev, country: '' })); const params = new URLSearchParams(searchParams.toString()); params.delete('search'); router.replace(params.toString() ? `${pathname}?${params.toString()}` : pathname); }} className="p-1.5 hover:bg-gray-100 rounded-full transition-all">
                     <X size={16} style={{ color: theme.colors.text.secondary }} />
                   </button>
                 )}
@@ -1115,35 +1102,29 @@ export default function JobList({ initialJobs, initialCountry, initialRoleCatego
                   defaultValue=""
                   onChange={(e) => {
                     const v = e.target.value;
-                    // Primary gulf countries — internal navigation
-                    const internalSearchMap: Record<string, string> = {
-                      'UAE': 'UAE',
-                      'Saudi Arabia': 'Saudi Arabia',
-                      'Kuwait': 'Kuwait',
-                      'Qatar': 'Qatar',
-                      'Bahrain': 'Bahrain',
-                      'Oman': 'Oman',
-                      'Jordan': 'Jordan',
-                      'Egypt': 'Egypt',
-                      'Lebanon': 'Lebanon',
-                    };
-                    if (v in internalSearchMap) {
-                      router.push(`/jobs?search=${encodeURIComponent(internalSearchMap[v])}`);
+                    const internalCountries = new Set(['UAE', 'Saudi Arabia', 'Kuwait', 'Qatar', 'Bahrain', 'Oman', 'Jordan', 'Egypt', 'Lebanon']);
+                    if (internalCountries.has(v)) {
+                      // Filter job list by country
+                      setFilters(prev => ({ ...prev, country: v }));
+                      return;
+                    }
+                    if (v === '' || v === 'All') {
+                      setFilters(prev => ({ ...prev, country: '' }));
                       return;
                     }
                     // Nigeria — external new tab
                     if (v === 'Nigeria') { window.open('https://jobmeter.app/jobs', '_blank', 'noopener,noreferrer'); return; }
                     // Global — external new tab
                     const globalRoutes: Record<string, string> = {
-                      'Global': 'https://www.global.jobmeter.app/jobs',
-                      'United States': 'https://www.global.jobmeter.app/jobs?search=United+States',
-                      'United Kingdom': 'https://www.global.jobmeter.app/jobs?search=United+Kingdom',
-                      'Canada': 'https://www.global.jobmeter.app/jobs?search=Canada',
-                      'Australia': 'https://www.global.jobmeter.app/jobs?search=Australia',
-                      'Germany': 'https://www.global.jobmeter.app/jobs?search=Germany',
-                      'France': 'https://www.global.jobmeter.app/jobs?search=France',
-                      'Netherlands': 'https://www.global.jobmeter.app/jobs?search=Netherlands',
-                      'Ireland': 'https://www.global.jobmeter.app/jobs?search=Ireland',
+                      'Global': 'https://remote.jobmeter.app/jobs',
+                      'United States': 'https://remote.jobmeter.app/jobs?search=United+States',
+                      'United Kingdom': 'https://remote.jobmeter.app/jobs?search=United+Kingdom',
+                      'Canada': 'https://remote.jobmeter.app/jobs?search=Canada',
+                      'Australia': 'https://remote.jobmeter.app/jobs?search=Australia',
+                      'Germany': 'https://remote.jobmeter.app/jobs?search=Germany',
+                      'France': 'https://remote.jobmeter.app/jobs?search=France',
+                      'Netherlands': 'https://remote.jobmeter.app/jobs?search=Netherlands',
+                      'Ireland': 'https://remote.jobmeter.app/jobs?search=Ireland',
                     };
                     const url = globalRoutes[v];
                     if (url) window.open(url, '_blank', 'noopener,noreferrer');
