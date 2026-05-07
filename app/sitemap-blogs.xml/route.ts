@@ -21,7 +21,7 @@ export async function GET() {
 
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-    // ✅ Table is `blogs`, not `posts`. Filter by is_published = true.
+    // ✅ Filter by is_published = true and country = 'gulf'
     const { data: blogs, error: blogError } = await supabase
       .from('blogs')
       .select('slug, updated_at')
@@ -45,7 +45,7 @@ export async function GET() {
       });
     }
 
-    console.log(`📄 Blogs sitemap: ${routes.length} posts`);
+    console.log(`📄 Gulf Blogs sitemap: ${routes.length} posts`);
   } catch (error) {
     console.error('Error generating blogs sitemap:', error);
     return new Response('Error generating sitemap', { status: 500 });
