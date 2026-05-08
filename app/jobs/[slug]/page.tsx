@@ -4,9 +4,6 @@ import JobClient from './JobClient';
 import { Metadata } from 'next';
 import { cache } from 'react';
 
-// force-static + revalidate=false means: render once per slug on first request,
-// cache forever on Vercel. Cloudflare then caches the HTML on top indefinitely.
-// Only re-renders if you manually call revalidatePath('/jobs/[slug]') when a job changes.
 export const revalidate = false;
 export const dynamic = 'force-static';
 
@@ -15,21 +12,21 @@ const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const COMPANIES_URL = 'https://jobs-api.joevicspro.workers.dev/companies';
 
 // ─── Table for this site ──────────────────────────────────────────────────────
-const JOBS_TABLE = 'jobs_nigeria';
+const JOBS_TABLE = 'jobs_gulf';
 
-// Plain REST fetch — no cookies, no request state, fully static-compatible
-const JOB_FIELDS = [
-  'id','title','role','slug','status','category','sector','employment_type',
-  'job_type','experience_level','location','company','about_company',
-  'salary_range','application','application_email','application_phone','application_url',
-  'apply_instruction','posted_date','deadline','description','responsibilities',
-  'qualifications','skills_required','ai_enhanced_skills','benefits',
-  'about_role','who_apply','standout','subject','related_roles','views','country','state',
-].join(',');
+// ─── Gulf country identifiers ─────────────────────────────────────────────────
+// Jobs whose `country` array or `location.country` matches any of these are
+// considered Gulf jobs and receive internal same-domain links.
+const GULF_COUNTRY_CODES = new Set([
+  'AE', 'SA', 'KW', 'QA', 'BH', 'OM', 'JO', 'EG', 'LB',
+  'UAE', 'uae', 'united arab emirates',
+  'saudi arabia', 'ksa',
+  'kuwait', 'qatar', 'bahrain', 'oman', 'jordan', 'egypt', 'lebanon',
+]);
 
 const getJob = cache(async (slug: string) => {
   const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/${JOBS_TABLE}?slug=eq.${slug}&select=${JOB_FIELDS}&limit=1`,
+    `${SUPABASE_URL}/rest/v1/${JOBS_TABLE}?slug=eq.${slug}&select=*&limit=1`,
     {
       headers: {
         apikey: SUPABASE_ANON_KEY,
@@ -45,9 +42,7 @@ const getJob = cache(async (slug: string) => {
 
 const getCompanies = cache(async () => {
   try {
-    const res = await fetch(COMPANIES_URL, {
-      next: { revalidate: false },
-    });
+    const res = await fetch(COMPANIES_URL, { next: { revalidate: 604800 } });
     const data = await res.json();
     return data.companies || [];
   } catch (error) {
@@ -56,23 +51,24 @@ const getCompanies = cache(async () => {
   }
 });
 
-// Plain REST fetch for related jobs — queries jobs_nigeria table
+/**
+ * Related jobs for gulf.jobmeter.app:
+ * Fetches jobs in the same category, then filters client-side to those whose
+ * country array or location.country is in the Gulf set.
+ * Falls back to showing all same-category jobs if no Gulf matches are found.
+ */
 const getRelatedJobs = cache(async (currentJob: any) => {
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  // Truncate to date-only so the fetch URL is identical for all renders on the
-  // same day — without this, the full ISO timestamp changes every second and
-  // Next.js treats every request as a cache miss, causing a full server render
-  // on every visit and inflating ISR writes and Function Invocations ~69x.
-  const dateStr = thirtyDaysAgo.toISOString().split('T')[0];
+  const dateStr = thirtyDaysAgo.toISOString();
 
   const params = new URLSearchParams({
-    select: 'id,title,company,location,category,slug,status,deadline,created_at',
+    select: 'id,title,company,location,country,category,slug,status,deadline,created_at',
     category: `eq.${currentJob.category}`,
     id: `neq.${currentJob.id}`,
     created_at: `gte.${dateStr}`,
     order: 'created_at.desc',
-    limit: '10',
+    limit: '30', // fetch more so we have room to filter
   });
 
   const res = await fetch(
@@ -86,7 +82,20 @@ const getRelatedJobs = cache(async (currentJob: any) => {
     }
   );
   if (!res.ok) return [];
-  return await res.json();
+
+  const allJobs: any[] = await res.json();
+
+  // Prefer Gulf-country jobs; fall back to all results if too few Gulf matches
+  const gulfJobs = allJobs.filter((j) => {
+    const countryArr: string[] = Array.isArray(j.country) ? j.country : [];
+    const locationCountry =
+      typeof j.location === 'object' ? (j.location?.country || '') : '';
+    return [...countryArr, locationCountry].some((c) =>
+      GULF_COUNTRY_CODES.has(c?.toLowerCase?.() ?? c)
+    );
+  });
+
+  return (gulfJobs.length >= 3 ? gulfJobs : allJobs).slice(0, 10);
 });
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
@@ -105,8 +114,8 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       title: titleCore,
       description,
       type: 'website',
-      siteName: 'JobMeter',
-      url: `https://www.jobmeter.app/jobs/${job.slug || job.id}`,
+      siteName: 'JobMeter Gulf',
+      url: `https://gulf.jobmeter.app/jobs/${job.slug || job.id}`,
     },
     twitter: {
       card: 'summary_large_image',
@@ -114,7 +123,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
       description,
     },
     alternates: {
-      canonical: `https://www.jobmeter.app/jobs/${job.slug || job.id}`,
+      canonical: `https://gulf.jobmeter.app/jobs/${job.slug || job.id}`,
     },
     robots: isNoIndex
       ? { index: false, follow: true }
@@ -136,10 +145,10 @@ export default async function JobPage({ params }: { params: { slug: string } }) 
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
       />
-      <JobClient 
-        job={job} 
-        relatedJobs={relatedJobs} 
-        companies={companies} 
+      <JobClient
+        job={job}
+        relatedJobs={relatedJobs}
+        companies={companies}
       />
     </>
   );

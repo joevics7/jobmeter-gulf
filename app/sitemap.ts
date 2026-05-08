@@ -35,6 +35,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'weekly',
       priority: 0.8,
     },
+    // ── Category pages (Jobs in Location / Role in Location) ──────────────────
+    {
+      url: `${siteUrl}/sitemap-category.xml`,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
+      priority: 0.8,
+    },
   ];
 
   try {
