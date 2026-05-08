@@ -7,11 +7,10 @@ import {
   Building2, Clock, TrendingUp, DollarSign, Shield,
   Globe, Users, GraduationCap, Home, Train, Heart,
   BookOpen, Star, ArrowRight, ExternalLink, CheckCircle,
-  ChevronDown // Added for accordion
+  ChevronDown
 } from 'lucide-react';
 import { CategoryJobPage, SalaryRow, SkillRow, AgencyRow, LinkRow, FAQRow } from './page';
 
-// ... (Constants, Job types, and Helpers remain the same)
 const WORKER_URL = 'https://jobs-api.joevicspro.workers.dev/jobs-gulf';
 const JOBS_PER_PAGE = 20;
 
@@ -70,18 +69,19 @@ function transformJob(j: RawJob): JobUI {
 }
 
 function matchesPage(job: RawJob, page: CategoryJobPage): boolean {
-  const cityMatch = !page.filter_city ||
+  const cityMatch =
+    !page.filter_city ||
     (typeof job.location === 'object' &&
-      job.location?.city?.toLowerCase().includes(page.filter_city.toLowerCase()));
+      !!job.location?.city?.toLowerCase().includes(page.filter_city.toLowerCase()));
 
-  const roleMatch = !page.filter_role ||
-    job.role_category?.toLowerCase().includes(page.filter_role.toLowerCase()) ||
-    job.title?.toLowerCase().includes(page.filter_role.toLowerCase());
+  const roleMatch =
+    !page.filter_role ||
+    !!job.role_category?.toLowerCase().includes(page.filter_role.toLowerCase()) ||
+    !!job.title?.toLowerCase().includes(page.filter_role.toLowerCase());
 
   return cityMatch && roleMatch;
 }
 
-// ... (Section and Prose remain the same)
 function Section({ id, icon: Icon, title, children }: {
   id?: string; icon?: React.ElementType; title: string; children: React.ReactNode;
 }) {
@@ -108,7 +108,6 @@ function Prose({ html }: { html: string }) {
   );
 }
 
-// ... (SalaryTable, SkillsGrid, AgenciesList, FAQAccordion, RelatedLinks, and JobCard remain the same)
 function SalaryTable({ rows }: { rows: SalaryRow[] }) {
   return (
     <div className="overflow-x-auto rounded-xl border border-gray-100">
@@ -124,12 +123,8 @@ function SalaryTable({ rows }: { rows: SalaryRow[] }) {
           {rows.map((row, i) => (
             <tr key={i} className="bg-white hover:bg-gray-50 transition-colors">
               <td className="px-4 py-3 font-medium text-gray-800">{row.role}</td>
-              <td className="px-4 py-3 text-gray-600">
-                {row.currency} {row.min?.toLocaleString()}
-              </td>
-              <td className="px-4 py-3 text-green-600 font-medium">
-                {row.currency} {row.max?.toLocaleString()}
-              </td>
+              <td className="px-4 py-3 text-gray-600">{row.currency} {row.min?.toLocaleString()}</td>
+              <td className="px-4 py-3 text-green-600 font-medium">{row.currency} {row.max?.toLocaleString()}</td>
             </tr>
           ))}
         </tbody>
@@ -144,7 +139,6 @@ function SalaryTable({ rows }: { rows: SalaryRow[] }) {
 function SkillsGrid({ skills }: { skills: SkillRow[] }) {
   const technical = skills.filter((s) => s.type === 'technical');
   const soft = skills.filter((s) => s.type === 'soft');
-
   return (
     <div className="grid sm:grid-cols-2 gap-4">
       {technical.length > 0 && (
@@ -179,13 +173,8 @@ function AgenciesList({ agencies }: { agencies: AgencyRow[] }) {
   return (
     <div className="grid sm:grid-cols-2 gap-3">
       {agencies.map((a, i) => (
-        <a
-          key={i}
-          href={a.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-start justify-between gap-3 rounded-xl border border-gray-100 bg-white p-4 hover:border-blue-200 hover:shadow-sm transition-all group"
-        >
+        <a key={i} href={a.url} target="_blank" rel="noopener noreferrer"
+          className="flex items-start justify-between gap-3 rounded-xl border border-gray-100 bg-white p-4 hover:border-blue-200 hover:shadow-sm transition-all group">
           <div>
             <p className="font-medium text-gray-900 group-hover:text-blue-600 text-sm">{a.name}</p>
             {a.note && <p className="text-xs text-gray-500 mt-1">{a.note}</p>}
@@ -203,15 +192,11 @@ function FAQAccordion({ faqs }: { faqs: FAQRow[] }) {
     <div className="space-y-2">
       {faqs.map((faq, i) => (
         <div key={i} className="rounded-xl border border-gray-100 bg-white overflow-hidden">
-          <button
-            onClick={() => setOpen(open === i ? null : i)}
-            className="w-full text-left px-5 py-4 flex items-center justify-between gap-3 font-medium text-gray-900 hover:bg-gray-50 transition-colors text-sm"
-          >
+          <button onClick={() => setOpen(open === i ? null : i)}
+            className="w-full text-left px-5 py-4 flex items-center justify-between gap-3 font-medium text-gray-900 hover:bg-gray-50 transition-colors text-sm">
             {faq.q}
-            <ChevronRight
-              size={16}
-              className={`shrink-0 text-gray-400 transition-transform duration-200 ${open === i ? 'rotate-90' : ''}`}
-            />
+            <ChevronRight size={16}
+              className={`shrink-0 text-gray-400 transition-transform duration-200 ${open === i ? 'rotate-90' : ''}`} />
           </button>
           {open === i && (
             <div className="px-5 pb-4 text-sm text-gray-600 leading-relaxed border-t border-gray-50 pt-3">
@@ -231,11 +216,8 @@ function RelatedLinks({ title, links }: { title: string; links: LinkRow[] }) {
       <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">{title}</p>
       <div className="flex flex-wrap gap-2">
         {links.map((link, i) => (
-          <Link
-            key={i}
-            href={`/category/${link.slug}`}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-gray-200 text-sm text-gray-600 hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50 transition-all"
-          >
+          <Link key={i} href={`/category/${link.slug}`}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-gray-200 text-sm text-gray-600 hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50 transition-all">
             {link.label} <ArrowRight size={12} />
           </Link>
         ))}
@@ -246,10 +228,8 @@ function RelatedLinks({ title, links }: { title: string; links: LinkRow[] }) {
 
 function JobCard({ job }: { job: JobUI }) {
   return (
-    <Link
-      href={`/jobs/${job.slug}`}
-      className="group block rounded-xl border border-gray-100 bg-white p-4 shadow-sm hover:border-blue-200 hover:shadow-md transition-all duration-200"
-    >
+    <Link href={`/jobs/${job.slug}`}
+      className="group block rounded-xl border border-gray-100 bg-white p-4 shadow-sm hover:border-blue-200 hover:shadow-md transition-all duration-200">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-gray-900 text-sm leading-snug group-hover:text-blue-600 transition-colors line-clamp-2">
@@ -270,8 +250,6 @@ function JobCard({ job }: { job: JobUI }) {
     </Link>
   );
 }
-
-// ─── Jobs Widget (Updated Link to /jobs) ───────────────────────────────────
 
 function JobsWidget({ page }: { page: CategoryJobPage }) {
   const [allJobs, setAllJobs] = useState<JobUI[]>([]);
@@ -308,20 +286,16 @@ function JobsWidget({ page }: { page: CategoryJobPage }) {
           <Briefcase size={20} className="text-blue-500" />
           {loading ? 'Loading jobs…' : `${filtered.length} Live Jobs`}
         </h2>
-        <span className="text-xs text-gray-400 bg-green-50 text-green-600 px-2 py-1 rounded-full font-medium">
+        <span className="text-xs bg-green-50 text-green-600 px-2 py-1 rounded-full font-medium">
           Updated daily
         </span>
       </div>
 
       <div className="relative mb-4">
         <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-        <input
-          type="text"
-          placeholder={`Search within ${page.h1}…`}
-          value={search}
+        <input type="text" placeholder={`Search within ${page.h1}…`} value={search}
           onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
-          className="w-full pl-9 pr-4 py-2.5 text-sm rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        />
+          className="w-full pl-9 pr-4 py-2.5 text-sm rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
       </div>
 
       {loading ? (
@@ -367,7 +341,7 @@ function JobsWidget({ page }: { page: CategoryJobPage }) {
       )}
 
       <div className="mt-8 text-center">
-        <Link href="/jobs" // Changed from "/" to "/jobs"
+        <Link href="/jobs"
           className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors">
           Browse All Gulf Jobs <ChevronRight size={16} />
         </Link>
@@ -376,10 +350,8 @@ function JobsWidget({ page }: { page: CategoryJobPage }) {
   );
 }
 
-// ─── Table of Contents (Updated to Accordion, closed by default) ────────────
-
 function TableOfContents({ page }: { page: CategoryJobPage }) {
-  const [isOpen, setIsOpen] = useState(false); // Closed by default
+  const [isOpen, setIsOpen] = useState(false);
 
   const items = [
     { id: 'jobs', label: 'Live Job Listings', show: true },
@@ -392,29 +364,25 @@ function TableOfContents({ page }: { page: CategoryJobPage }) {
     { id: 'how-to-apply', label: 'How to Apply', show: !!page.how_to_apply_html },
     { id: 'cost-of-living', label: 'Cost of Living', show: !!page.cost_of_living_html },
     { id: 'housing', label: 'Housing', show: !!page.housing_html },
-    { id: 'faq', label: 'FAQ', show: page.faq_json?.length > 0 },
+    { id: 'faq', label: 'FAQ', show: (page.faq_json?.length ?? 0) > 0 },
   ].filter((i) => i.show);
 
   return (
-    <nav className="rounded-xl border border-gray-100 bg-white overflow-hidden mb-8 transition-all">
-      <button 
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between p-5 text-left group"
-      >
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide group-hover:text-blue-600">In This Guide</p>
+    <nav className="rounded-xl border border-gray-100 bg-white overflow-hidden mb-8">
+      <button onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between p-5 text-left group">
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide group-hover:text-blue-600">
+          In This Guide
+        </p>
         <ChevronDown size={16} className={`text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
-      
       {isOpen && (
         <div className="px-5 pb-5 border-t border-gray-50 pt-4">
           <ol className="space-y-1.5">
             {items.map((item, i) => (
               <li key={item.id}>
-                <a
-                  href={`#${item.id}`}
-                  onClick={() => setIsOpen(false)} // Close on selection
-                  className="flex items-center gap-2 text-sm text-gray-600 hover:text-blue-600 transition-colors"
-                >
+                <a href={`#${item.id}`} onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-2 text-sm text-gray-600 hover:text-blue-600 transition-colors">
                   <span className="text-xs text-gray-400 w-4 shrink-0">{i + 1}.</span>
                   {item.label}
                 </a>
@@ -427,12 +395,9 @@ function TableOfContents({ page }: { page: CategoryJobPage }) {
   );
 }
 
-// ─── Main Client Component (Removed "Last updated") ─────────────────────────
-
 export default function CategoryPageClient({ page }: { page: CategoryJobPage }) {
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Breadcrumb */}
       <div className="bg-white border-b border-gray-100">
         <div className="max-w-4xl mx-auto px-4 py-3">
           <nav className="flex items-center gap-1.5 text-xs text-gray-400">
@@ -446,7 +411,6 @@ export default function CategoryPageClient({ page }: { page: CategoryJobPage }) 
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-10">
-        {/* Header (Last updated removed) */}
         <header className="mb-8">
           <div className="flex items-center gap-2 text-sm text-blue-600 font-medium mb-3">
             <MapPin size={14} />
@@ -463,211 +427,147 @@ export default function CategoryPageClient({ page }: { page: CategoryJobPage }) 
           </h1>
         </header>
 
-        {/* Table of Contents */}
         <TableOfContents page={page} />
-
-        {/* Intro */}
         <Prose html={page.intro_html} />
-
-        {/* Live Jobs Widget */}
         <JobsWidget page={page} />
 
-        {/* Hiring Trends */}
         {page.hiring_trends_html && (
           <Section id="trends" icon={TrendingUp} title={page.page_type === 'role_in_location' ? 'Demand & Hiring Trends' : 'Current Hiring Trends'}>
             <Prose html={page.hiring_trends_html} />
           </Section>
         )}
-
-        {/* Top Industries / Top Employers */}
         {page.top_industries_html && (
           <Section id="industries" icon={Building2} title={page.page_type === 'role_in_location' ? 'Top Employers Hiring' : 'Top Industries Hiring'}>
             <Prose html={page.top_industries_html} />
           </Section>
         )}
-
-        {/* Salary Table */}
         {page.salary_table_json && page.salary_table_json.length > 0 && (
           <Section id="salaries" icon={DollarSign} title="Salaries">
             <SalaryTable rows={page.salary_table_json} />
-            {page.salary_notes_html && (
-              <div className="mt-4">
-                <Prose html={page.salary_notes_html} />
-              </div>
-            )}
+            {page.salary_notes_html && <div className="mt-4"><Prose html={page.salary_notes_html} /></div>}
           </Section>
         )}
-
-        {/* Cost of Living (jobs_in_location only) */}
         {page.cost_of_living_html && (
           <Section id="cost-of-living" icon={Home} title="Cost of Living vs Salary">
             <Prose html={page.cost_of_living_html} />
           </Section>
         )}
-
-        {/* In-Demand Skills */}
         {page.skills_json && page.skills_json.length > 0 && (
           <Section id="skills" icon={Star} title="In-Demand Skills">
             <SkillsGrid skills={page.skills_json} />
           </Section>
         )}
-
-        {/* Qualifications */}
         {page.qualifications_html && (
           <Section id="qualifications" icon={GraduationCap} title="Qualifications & Licensing">
             <Prose html={page.qualifications_html} />
           </Section>
         )}
-
-        {/* Visa */}
         {page.visa_html && (
           <Section id="visa" icon={Globe} title="Visa & Sponsorship">
             <Prose html={page.visa_html} />
           </Section>
         )}
-
-        {/* Employment Law */}
         {page.employment_law_html && (
           <Section id="employment-law" icon={Shield} title="Employment Law & Worker Rights">
             <Prose html={page.employment_law_html} />
           </Section>
         )}
-
-        {/* Tax */}
         {page.tax_html && (
           <Section id="tax" icon={DollarSign} title="Tax Information">
             <Prose html={page.tax_html} />
           </Section>
         )}
-
-        {/* Work Environment (role_in_location) */}
         {page.work_environment_html && (
           <Section id="work-environment" icon={Briefcase} title="Work Environment & Schedules">
             <Prose html={page.work_environment_html} />
           </Section>
         )}
-
-        {/* Career Growth */}
         {page.career_growth_html && (
           <Section id="career-growth" icon={TrendingUp} title="Career Growth & Progression">
             <Prose html={page.career_growth_html} />
           </Section>
         )}
-
-        {/* Job Types */}
         {page.job_types_html && (
           <Section id="job-types" icon={Briefcase} title="Contract, Remote & Part-Time Options">
             <Prose html={page.job_types_html} />
           </Section>
         )}
-
-        {/* Fresh Graduates */}
         {page.graduates_html && (
           <Section id="graduates" icon={GraduationCap} title="Fresh Graduate Opportunities">
             <Prose html={page.graduates_html} />
           </Section>
         )}
-
-        {/* How to Apply */}
         {page.how_to_apply_html && (
           <Section id="how-to-apply" icon={CheckCircle} title="Step-by-Step: How to Apply">
             <Prose html={page.how_to_apply_html} />
           </Section>
         )}
-
-        {/* Recruitment Agencies */}
         {page.agencies_json && page.agencies_json.length > 0 && (
           <Section id="agencies" icon={Users} title="Recruitment Agencies">
             <AgenciesList agencies={page.agencies_json} />
           </Section>
         )}
-
-        {/* CV Tips */}
         {page.cv_tips_html && (
           <Section id="cv-tips" icon={BookOpen} title="CV / Resume Tips for This Market">
             <Prose html={page.cv_tips_html} />
           </Section>
         )}
-
-        {/* Interview Tips */}
         {page.interview_tips_html && (
           <Section id="interview-tips" icon={Star} title="Interview Tips">
             <Prose html={page.interview_tips_html} />
           </Section>
         )}
-
-        {/* Housing */}
         {page.housing_html && (
           <Section id="housing" icon={Home} title="Housing & Best Areas to Live">
             <Prose html={page.housing_html} />
           </Section>
         )}
-
-        {/* Transport */}
         {page.transport_html && (
           <Section id="transport" icon={Train} title="Commuting & Public Transport">
             <Prose html={page.transport_html} />
           </Section>
         )}
-
-        {/* Healthcare */}
         {page.healthcare_html && (
           <Section id="healthcare" icon={Heart} title="Healthcare & Insurance">
             <Prose html={page.healthcare_html} />
           </Section>
         )}
-
-        {/* Education & Family */}
         {page.education_html && (
           <Section id="education" icon={BookOpen} title="Education & Family Considerations">
             <Prose html={page.education_html} />
           </Section>
         )}
-
-        {/* Lifestyle */}
         {page.lifestyle_html && (
           <Section id="lifestyle" icon={Star} title="Safety & Lifestyle">
             <Prose html={page.lifestyle_html} />
           </Section>
         )}
-
-        {/* Stats */}
         {page.stats_html && (
           <Section id="stats" icon={TrendingUp} title="Job Statistics & Labor Data">
             <Prose html={page.stats_html} />
           </Section>
         )}
-
-        {/* Role comparison (role_in_location) */}
         {page.role_comparison_html && (
           <Section id="comparison" icon={Globe} title="How This Compares to Other Locations">
             <Prose html={page.role_comparison_html} />
           </Section>
         )}
-
-        {/* FAQ */}
-        {page.faq_json?.length > 0 && (
+        {(page.faq_json?.length ?? 0) > 0 && (
           <Section id="faq" icon={BookOpen} title="Frequently Asked Questions">
             <FAQAccordion faqs={page.faq_json} />
           </Section>
         )}
-
-        {/* Conclusion (Updated Link to /jobs) */}
         {page.conclusion_html && (
           <section className="mt-10">
             <div className="rounded-xl bg-blue-50 border border-blue-100 p-6">
               <Prose html={page.conclusion_html} />
-              <Link
-                href="/jobs" // Changed from "/" to "/jobs"
-                className="inline-flex items-center gap-2 mt-4 px-5 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors"
-              >
+              <Link href="/jobs"
+                className="inline-flex items-center gap-2 mt-4 px-5 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors">
                 Browse All Gulf Jobs <ArrowRight size={16} />
               </Link>
             </div>
           </section>
         )}
-
-        {/* Related links */}
         {(page.related_locations_json?.length > 0 || page.related_roles_json?.length > 0) && (
           <section className="mt-10 pt-8 border-t border-gray-100 space-y-5">
             <RelatedLinks title="Related Locations" links={page.related_locations_json ?? []} />
