@@ -62,6 +62,7 @@ async function getCategories(): Promise<GroupedCategories[]> {
       'slug, page_type, filter_city, filter_country, filter_role, h1, meta_description, updated_at'
     )
     .eq('is_published', true)
+    .eq('website_country', 'gulf') // Added filter for gulf website
     .order('filter_country', { ascending: true })
     .order('page_type', { ascending: true })
     .order('h1', { ascending: true });

@@ -30,6 +30,7 @@ export async function GET() {
       .from('category_job_pages')
       .select('slug, updated_at, page_type')
       .eq('is_published', true)
+      .eq('website_country', 'gulf') // Added filter for gulf website
       .order('updated_at', { ascending: false });
 
     if (error) {

@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { mapJobToSchema } from '@/lib/mapJobToSchema';
 import JobClient from './JobClient';
+import JobList from '@/components/jobs/JobList'; // Added to handle country breadcrumb
 import { Metadata } from 'next';
 import { cache } from 'react';
 
@@ -15,14 +16,22 @@ const COMPANIES_URL = 'https://jobs-api.joevicspro.workers.dev/companies';
 const JOBS_TABLE = 'jobs_gulf';
 
 // ─── Gulf country identifiers ─────────────────────────────────────────────────
-// Jobs whose `country` array or `location.country` matches any of these are
-// considered Gulf jobs and receive internal same-domain links.
 const GULF_COUNTRY_CODES = new Set([
   'AE', 'SA', 'KW', 'QA', 'BH', 'OM', 'JO', 'EG', 'LB',
   'UAE', 'uae', 'united arab emirates',
   'saudi arabia', 'ksa',
   'kuwait', 'qatar', 'bahrain', 'oman', 'jordan', 'egypt', 'lebanon',
 ]);
+
+// Map for breadcrumb links to work
+const COUNTRY_MAP: Record<string, string> = {
+  'united-arab-emirates': 'United Arab Emirates',
+  'saudi-arabia': 'Saudi Arabia',
+  'qatar': 'Qatar',
+  'kuwait': 'Kuwait',
+  'oman': 'Oman',
+  'bahrain': 'Bahrain'
+};
 
 const getJob = cache(async (slug: string) => {
   const res = await fetch(
@@ -32,7 +41,7 @@ const getJob = cache(async (slug: string) => {
         apikey: SUPABASE_ANON_KEY,
         Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
       },
-      next: { revalidate: false },
+      next: { revalidate: 3600 },
     }
   );
   if (!res.ok) return null;
@@ -40,66 +49,44 @@ const getJob = cache(async (slug: string) => {
   return data[0] || null;
 });
 
-const getCompanies = cache(async () => {
-  try {
-    const res = await fetch(COMPANIES_URL, { next: { revalidate: 604800 } });
-    const data = await res.json();
-    return data.companies || [];
-  } catch (error) {
-    console.error('Failed to fetch companies from Cloudflare:', error);
-    return [];
-  }
-});
-
-/**
- * Related jobs for gulf.jobmeter.app:
- * Fetches jobs in the same category, then filters client-side to those whose
- * country array or location.country is in the Gulf set.
- * Falls back to showing all same-category jobs if no Gulf matches are found.
- */
-const getRelatedJobs = cache(async (currentJob: any) => {
-  const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  const dateStr = thirtyDaysAgo.toISOString();
-
-  const params = new URLSearchParams({
-    select: 'id,title,company,location,country,category,slug,status,deadline,created_at',
-    category: `eq.${currentJob.category}`,
-    id: `neq.${currentJob.id}`,
-    created_at: `gte.${dateStr}`,
-    order: 'created_at.desc',
-    limit: '30', // fetch more so we have room to filter
-  });
-
+const getRelatedJobs = async (job: any) => {
   const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/${JOBS_TABLE}?${params.toString()}`,
+    `${SUPABASE_URL}/rest/v1/${JOBS_TABLE}?id=neq.${job.id}&limit=6`,
     {
       headers: {
         apikey: SUPABASE_ANON_KEY,
         Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
       },
-      next: { revalidate: false },
     }
   );
   if (!res.ok) return [];
+  return res.json();
+};
 
-  const allJobs: any[] = await res.json();
-
-  // Prefer Gulf-country jobs; fall back to all results if too few Gulf matches
-  const gulfJobs = allJobs.filter((j) => {
-    const countryArr: string[] = Array.isArray(j.country) ? j.country : [];
-    const locationCountry =
-      typeof j.location === 'object' ? (j.location?.country || '') : '';
-    return [...countryArr, locationCountry].some((c) =>
-      GULF_COUNTRY_CODES.has(c?.toLowerCase?.() ?? c)
-    );
-  });
-
-  return (gulfJobs.length >= 3 ? gulfJobs : allJobs).slice(0, 10);
-});
+const getCompanies = async () => {
+  try {
+    const res = await fetch(COMPANIES_URL);
+    if (!res.ok) return [];
+    const data = await res.json();
+    // Ensure we return the array part if the API wraps it in an object
+    return Array.isArray(data) ? data : data.companies || [];
+  } catch (error) {
+    return [];
+  }
+};
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const job = await getJob(params.slug);
+  const { slug } = params;
+
+  // Fix 404 for breadcrumb links
+  if (COUNTRY_MAP[slug]) {
+    return {
+      title: `Jobs in ${COUNTRY_MAP[slug]} - JobMeter Gulf`,
+      description: `Find the latest employment opportunities in ${COUNTRY_MAP[slug]}.`,
+    };
+  }
+
+  const job = await getJob(slug);
   if (!job) return { title: 'Job Not Found' };
 
   const companyName = typeof job.company === 'string' ? job.company : job.company?.name || 'Company';
@@ -132,24 +119,35 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 }
 
 export default async function JobPage({ params }: { params: { slug: string } }) {
-  const job = await getJob(params.slug);
+  const { slug } = params;
+
+  // Handle Country Breadcrumb clicks (/jobs/united-arab-emirates)
+  if (COUNTRY_MAP[slug]) {
+    return (
+      <main className="min-h-screen bg-white pt-8">
+        <div className="max-w-7xl mx-auto px-4">
+          <JobList initialCountry={COUNTRY_MAP[slug]} />
+        </div>
+      </main>
+    );
+  }
+
+  const job = await getJob(slug);
   if (!job) notFound();
 
-  const companies = await getCompanies();
+  const companiesData = await getCompanies();
+  // Minimal fix: Ensure companies is always an array to prevent .find() error
+  const companies = Array.isArray(companiesData) ? companiesData : [];
+  
   const relatedJobs = await getRelatedJobs(job);
   const schema = mapJobToSchema(job);
 
   return (
-    <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-      />
-      <JobClient
-        job={job}
-        relatedJobs={relatedJobs}
-        companies={companies}
-      />
-    </>
+    <JobClient 
+      job={job} 
+      relatedJobs={relatedJobs} 
+      companies={companies} 
+      schema={schema} 
+    />
   );
 }
