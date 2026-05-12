@@ -72,9 +72,9 @@ const nextConfig = {
     ];
   },
 
-  // Fix 404 bot loops seen in Vercel logs
   async redirects() {
     return [
+      // Fix 404 bot loops seen in Vercel logs
       {
         source: '/companies',
         destination: '/jobs',
@@ -84,6 +84,20 @@ const nextConfig = {
         source: '/offline.html',
         destination: '/',
         permanent: false,
+      },
+
+      // Redirect Nigeria location pages (spilled over from jobmeter.app)
+      {
+        source: '/jobs/Location/nigeria/:path*',
+        destination: '/jobs',
+        permanent: true,
+      },
+
+      // Redirect all /resources/* — Nigeria category/location pages
+      {
+        source: '/resources/:path*',
+        destination: '/jobs',
+        permanent: true,
       },
     ];
   },
