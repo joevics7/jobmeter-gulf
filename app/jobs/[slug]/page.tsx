@@ -140,14 +140,24 @@ export default async function JobPage({ params }: { params: { slug: string } }) 
   const companies = Array.isArray(companiesData) ? companiesData : [];
   
   const relatedJobs = await getRelatedJobs(job);
+  
+  // 1. Generate the schema object
   const schema = mapJobToSchema(job);
 
   return (
-    <JobClient 
-      job={job} 
-      relatedJobs={relatedJobs} 
-      companies={companies} 
-      schema={schema} 
-    />
+    <>
+      {/* 2. Inject the JSON-LD schema script directly into the HTML head/body via Server Component */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+      />
+      
+      {/* 3. Pass only the data JobClient is expecting (schema removed) */}
+      <JobClient 
+        job={job} 
+        relatedJobs={relatedJobs} 
+        companies={companies} 
+      />
+    </>
   );
 }
