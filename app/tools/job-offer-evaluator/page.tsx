@@ -176,7 +176,8 @@ export default function JobOfferEvaluatorPage() {
 
         {/* Top Ad */}
         <div className="max-w-6xl mx-auto px-6 py-4">
-          <AdUnit />
+          {/* Added 'slot' prop to fulfill AdUnitProps layout requirements */}
+          <AdUnit slot="job-evaluator-top" />
         </div>
 
         {/* Condensed intro — single line, smaller font */}
@@ -195,7 +196,8 @@ export default function JobOfferEvaluatorPage() {
 
         {/* Ad */}
         <div className="max-w-6xl mx-auto px-6 py-6">
-          <AdUnit />
+          {/* Added 'slot' prop to fulfill AdUnitProps layout requirements */}
+          <AdUnit slot="job-evaluator-bottom" />
         </div>
 
         {/* SEO Content Section */}
