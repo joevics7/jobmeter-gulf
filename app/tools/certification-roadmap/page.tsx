@@ -95,7 +95,8 @@ export default function CertificationRoadmapPage() {
 
         {/* Top Ad */}
         <div className="max-w-6xl mx-auto px-6 py-4">
-          <AdUnit />
+          {/* Added the required slot prop here */}
+          <AdUnit slot="top-ad-slot" />
         </div>
 
         {/* Condensed intro */}
@@ -114,7 +115,8 @@ export default function CertificationRoadmapPage() {
 
         {/* Ad */}
         <div className="max-w-6xl mx-auto px-6 py-6">
-          <AdUnit />
+          {/* Added the required slot prop here */}
+          <AdUnit slot="bottom-ad-slot" />
         </div>
 
         {/* SEO Content Section - Aiming for 2000 Words */}
