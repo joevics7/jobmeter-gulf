@@ -323,7 +323,8 @@ export const allRoles: Role[] = [
   { id: 'mkt3', title: 'Content Marketing Manager', sector: 'Marketing & Digital', demandLevel: 'Medium', recommendedCerts: ['google-analytics'] },
 ];
 
-  // ==================== ADDITIONAL GENERAL & HIGH-DEMAND CERTIFICATIONS (Batch 2) ================
+// ==================== ADDITIONAL GENERAL & HIGH-DEMAND CERTIFICATIONS (Batch 2) ================
+export const batch2Certifications: Certification[] = [
   {
     id: 'google-data-analytics', name: 'Google Data Analytics Professional Certificate', issuer: 'Google', category: 'IT & Technology',
     level: 'Foundation', costRangeUSD: 'Free-300', durationMonths: 3, validityYears: 0, salaryUplift: '18-35%',
@@ -422,4 +423,15 @@ export const allRoles: Role[] = [
   }
 ];
 
-export const certificationMap = new Map(allCertifications.map(cert => [cert.id, cert]));
+// ==================== UNIFIED CERTIFICATION MERGER ====================
+
+// Merges Batch 1 and Batch 2 seamlessly into a complete listing array
+export const totalCertificationsList: Certification[] = [
+  ...allCertifications,
+  ...batch2Certifications
+];
+
+// Export standard Map generated dynamically from the unified collection
+export const certificationMap = new Map<string, Certification>(
+  totalCertificationsList.map(cert => [cert.id, cert])
+);
