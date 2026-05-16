@@ -135,7 +135,7 @@ export default function CostOfLivingPage() {
 
         {/* Top Ad */}
         <div className="max-w-6xl mx-auto px-6 py-4">
-          <AdUnit />
+          <AdUnit slot="top-ad-slot" />
         </div>
 
         {/* Intro Container */}
@@ -154,7 +154,7 @@ export default function CostOfLivingPage() {
 
         {/* Middle Ad */}
         <div className="max-w-6xl mx-auto px-6 py-6">
-          <AdUnit />
+          <AdUnit slot="middle-ad-slot" />
         </div>
 
         {/* SEO Content Section */}
