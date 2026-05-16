@@ -21,7 +21,10 @@ export default function EquivalencyCheckerClient() {
       return;
     }
 
-    const calc = calculateLikelihood(country, degreeLevel, studyMode, accredited, target);
+    // Convert 'Saudi Arabia' to 'Saudi' to match the expected parameter type of calculateLikelihood
+    const apiTarget = target === 'Saudi Arabia' ? 'Saudi' : target;
+    const calc = calculateLikelihood(country, degreeLevel, studyMode, accredited, apiTarget);
+    
     setResult({ ...calc, country, target, degreeLevel, studyMode });
   };
 
@@ -89,7 +92,7 @@ export default function EquivalencyCheckerClient() {
               {studyModes.map((mode) => (
                 <button
                   key={mode}
-                  onClick={() => setStudyMode(mode)}
+                  onClick={() => setTarget && setStudyMode(mode)}
                   className={`p-4 rounded-2xl border text-left transition ${
                     studyMode === mode ? 'border-teal-600 bg-teal-50' : 'hover:border-gray-300'
                   }`}
