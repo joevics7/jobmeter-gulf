@@ -172,7 +172,7 @@ export default function SalaryBenchmarkPage() {
 
         {/* Top Ad Unit */}
         <div className="max-w-6xl mx-auto px-6 py-4">
-          <AdUnit />
+          <AdUnit slot="top-ad" />
         </div>
 
         {/* Short Parameter Container Before Tool */}
@@ -191,7 +191,7 @@ export default function SalaryBenchmarkPage() {
 
         {/* Mid-Page Ad Unit */}
         <div className="max-w-6xl mx-auto px-6 py-6">
-          <AdUnit />
+          <AdUnit slot="mid-page-ad" />
         </div>
 
         {/* High-Intent SEO Copy Layout Component */}
