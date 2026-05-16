@@ -159,7 +159,7 @@ export default function SaudiDependentLevyPage() {
 
         {/* Top Ad */}
         <div className="max-w-6xl mx-auto px-6 py-4">
-          <AdUnit />
+          <AdUnit slot="top-ad" />
         </div>
 
         {/* Condensed intro container before the tool inside white content card */}
@@ -178,7 +178,7 @@ export default function SaudiDependentLevyPage() {
 
         {/* Ad */}
         <div className="max-w-6xl mx-auto px-6 py-6">
-          <AdUnit />
+          <AdUnit slot="mid-page-ad" />
         </div>
 
         {/* SEO Content Section — Designed perfectly around tools framework */}
