@@ -321,7 +321,7 @@ export const allRoles: Role[] = [
   { id: 'mkt1', title: 'Digital Marketing Manager', sector: 'Marketing & Digital', demandLevel: 'High', recommendedCerts: ['google-ads', 'facebook-blueprint'] },
   { id: 'mkt2', title: 'SEO Specialist', sector: 'Marketing & Digital', demandLevel: 'Medium', recommendedCerts: ['google-analytics'] },
   { id: 'mkt3', title: 'Content Marketing Manager', sector: 'Marketing & Digital', demandLevel: 'Medium', recommendedCerts: ['google-analytics'] },
-
+];
 
   // ==================== ADDITIONAL GENERAL & HIGH-DEMAND CERTIFICATIONS (Batch 2) ================
   {
