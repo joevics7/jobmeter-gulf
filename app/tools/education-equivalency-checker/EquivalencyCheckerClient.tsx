@@ -92,7 +92,7 @@ export default function EquivalencyCheckerClient() {
               {studyModes.map((mode) => (
                 <button
                   key={mode}
-                  onClick={() => setTarget && setStudyMode(mode)}
+                  onClick={() => setStudyMode(mode)}
                   className={`p-4 rounded-2xl border text-left transition ${
                     studyMode === mode ? 'border-teal-600 bg-teal-50' : 'hover:border-gray-300'
                   }`}
