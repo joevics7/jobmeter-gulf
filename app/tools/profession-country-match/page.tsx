@@ -437,7 +437,7 @@ export default function ProfessionCountryMatchPage() {
   );
 }
 
-// AdUnit - unchanged from original
+// AdUnit Component with corrected styles
 function AdUnit({ type }: { type: 'top' | 'middle' | 'bottom' }) {
   const slot = type === 'top' ? '4198231153' : type === 'middle' ? '4690286797' : '9751041788';
   const isInArticle = type === 'middle';
@@ -447,7 +447,7 @@ function AdUnit({ type }: { type: 'top' | 'middle' | 'bottom' }) {
       <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1119289641389825" crossOrigin="anonymous"></script>
       <ins
         className="adsbygoogle"
-        style={{ display: 'block', textAlign: isInArticle ? 'center' : 'block' }}
+        style={{ display: 'block', textAlign: isInArticle ? 'center' : undefined }}
         data-ad-client="ca-pub-1119289641389825"
         data-ad-slot={slot}
         data-ad-format={isInArticle ? "fluid" : "auto"}
