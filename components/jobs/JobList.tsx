@@ -1116,15 +1116,15 @@ export default function JobList({ siteType = 'gulf', initialJobs, initialCountry
                     if (v === 'Nigeria') { window.open('https://jobmeter.app/jobs', '_blank', 'noopener,noreferrer'); return; }
                     // Global — external new tab
                     const globalRoutes: Record<string, string> = {
-                      'Global': 'https://remote.jobmeter.app/jobs',
-                      'United States': 'https://remote.jobmeter.app/jobs?search=United+States',
-                      'United Kingdom': 'https://remote.jobmeter.app/jobs?search=United+Kingdom',
-                      'Canada': 'https://remote.jobmeter.app/jobs?search=Canada',
-                      'Australia': 'https://remote.jobmeter.app/jobs?search=Australia',
-                      'Germany': 'https://remote.jobmeter.app/jobs?search=Germany',
-                      'France': 'https://remote.jobmeter.app/jobs?search=France',
-                      'Netherlands': 'https://remote.jobmeter.app/jobs?search=Netherlands',
-                      'Ireland': 'https://remote.jobmeter.app/jobs?search=Ireland',
+                      'Global': 'https://jobmeter.app/jobs',
+                      'United States': 'https://jobmeter.app/jobs?search=United+States',
+                      'United Kingdom': 'https://jobmeter.app/jobs?search=United+Kingdom',
+                      'Canada': 'https://jobmeter.app/jobs?search=Canada',
+                      'Australia': 'https://jobmeter.app/jobs?search=Australia',
+                      'Germany': 'https://jobmeter.app/jobs?search=Germany',
+                      'France': 'https://jobmeter.app/jobs?search=France',
+                      'Netherlands': 'https://jobmeter.app/jobs?search=Netherlands',
+                      'Ireland': 'https://jobmeter.app/jobs?search=Ireland',
                     };
                     const url = globalRoutes[v];
                     if (url) window.open(url, '_blank', 'noopener,noreferrer');

@@ -108,11 +108,10 @@ function isGulfJob(job: any): boolean {
 
 /**
  * Builds a search tag URL:
- * - Gulf jobs → internal /jobs?search=... link (same domain, no new tab)
- * - Other jobs → /jobs page (fallback)
+ * Updated to force global jobmeter domain
  */
 function buildSearchUrl(keyword: string): string {
-  return `/jobs?sort=match&search=${encodeURIComponent(keyword)}`;
+  return `https://jobmeter.app/jobs?sort=match&search=${encodeURIComponent(keyword)}`;
 }
 
 export default function JobClient({ job, relatedJobs, companies }: { 
@@ -161,7 +160,7 @@ export default function JobClient({ job, relatedJobs, companies }: {
   };
 
   const handleShare = async () => {
-    const shareUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/jobs/${job.slug || job.id}`;
+    const shareUrl = `https://jobmeter.app/jobs/${job.slug || job.id}`;
     if (navigator.share) {
       try {
         await navigator.share({
@@ -352,17 +351,17 @@ export default function JobClient({ job, relatedJobs, companies }: {
           <div className="border-b border-gray-100">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
               <nav className="flex items-center gap-1.5 text-xs text-gray-500 flex-wrap" aria-label="Breadcrumb">
-                <a href="/" className="flex items-center gap-1 hover:text-gray-700 transition-colors">
+                <a href="https://jobmeter.app" className="flex items-center gap-1 hover:text-gray-700 transition-colors">
                   <Home size={11} />
                   <span>Home</span>
                 </a>
                 <span className="text-gray-300">/</span>
-                <a href="/jobs" className="hover:text-gray-700 transition-colors">Jobs</a>
+                <a href="https://jobmeter.app/jobs" className="hover:text-gray-700 transition-colors">Jobs</a>
                 {breadcrumbCountry && (
                   <>
                     <span className="text-gray-300">/</span>
                     <a
-                      href={`/jobs/${breadcrumbCountry.slug}`}
+                      href={`https://jobmeter.app/jobs/${breadcrumbCountry.slug}`}
                       className="hover:text-gray-700 transition-colors capitalize"
                     >
                       {breadcrumbCountry.name}
@@ -378,7 +377,7 @@ export default function JobClient({ job, relatedJobs, companies }: {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5">
             <div className="flex items-center justify-between gap-3">
               <button
-                onClick={() => router.push('/jobs')}
+                onClick={() => window.location.href = 'https://jobmeter.app/jobs'}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors font-medium text-sm"
                 style={{ color: theme.colors.primary.DEFAULT }}
               >
@@ -456,7 +455,7 @@ export default function JobClient({ job, relatedJobs, companies }: {
                       <>
                         {matchedCompany?.slug ? (
                           <a
-                            href={`/companies/${matchedCompany.slug}`}
+                            href={`https://jobmeter.app/companies/${matchedCompany.slug}`}
                             className="hover:underline transition-colors"
                             style={{ color: theme.colors.primary.DEFAULT }}
                           >
@@ -490,13 +489,12 @@ export default function JobClient({ job, relatedJobs, companies }: {
                     ? (locObj?.state || locObj?.city || locObj?.country || null)
                     : null;
                   const locWord = locRaw ? locRaw.trim().split(/\s+/)[0] : null;
-                  // Gulf jobs: internal link; non-Gulf: internal /jobs fallback
                   const locSearchUrl = locWord ? buildSearchUrl(locWord) : null;
 
                   return (
                     <div className="flex flex-wrap gap-2 mb-6">
                       <a
-                        href="/jobs?posted=today"
+                        href="https://jobmeter.app/jobs?posted=today"
                         className="px-3 py-1.5 rounded-full text-sm font-medium transition-colors"
                         style={{ backgroundColor: `${theme.colors.primary.DEFAULT}15`, color: theme.colors.primary.DEFAULT }}
                       >
@@ -524,7 +522,7 @@ export default function JobClient({ job, relatedJobs, companies }: {
                       )}
 
                       <a
-                        href="/jobs?sort=match&search=remote"
+                        href="https://jobmeter.app/jobs?sort=match&search=remote"
                         className="px-3 py-1.5 rounded-full text-sm font-medium transition-colors"
                         style={{ backgroundColor: `${theme.colors.primary.DEFAULT}15`, color: theme.colors.primary.DEFAULT }}
                       >
@@ -542,7 +540,7 @@ export default function JobClient({ job, relatedJobs, companies }: {
                     <p className="text-lg font-bold text-gray-900 mb-3">Find similar jobs instead:</p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {similarJobs.slice(0, 10).map((similarJob) => (
-                        <a key={similarJob.id} href={`/jobs/${similarJob.slug || similarJob.id}`} className="block p-3 bg-white hover:bg-blue-50 rounded-lg transition-colors">
+                        <a key={similarJob.id} href={`https://jobmeter.app/jobs/${similarJob.slug || similarJob.id}`} className="block p-3 bg-white hover:bg-blue-50 rounded-lg transition-colors">
                           <p className="text-base font-medium text-blue-600 line-clamp-1">{similarJob.title}</p>
                           <p className="text-xs text-gray-900 mt-0.5">
                             {typeof similarJob.company === 'string' ? similarJob.company : similarJob.company?.name || 'Company'}
@@ -551,7 +549,7 @@ export default function JobClient({ job, relatedJobs, companies }: {
                       ))}
                     </div>
                     {similarJobs.length > 10 && (
-                      <a href="/jobs" className="inline-block mt-3 text-sm font-medium text-blue-600 underline hover:text-blue-800">
+                      <a href="https://jobmeter.app/jobs" className="inline-block mt-3 text-sm font-medium text-blue-600 underline hover:text-blue-800">
                         View all similar jobs →
                       </a>
                     )}
@@ -673,6 +671,7 @@ export default function JobClient({ job, relatedJobs, companies }: {
                 <AdUnit slot={AD_SLOTS.IN_ARTICLE} format="fluid" layout="in-article" style={{ display: 'block', textAlign: 'center', width: '100%' }} />
               </div>
 
+              {/* Responsibilities */}
               {(() => {
                 const responsibilitiesArray = Array.isArray(job.responsibilities) ? job.responsibilities : [];
                 if (responsibilitiesArray.length > 0) {
@@ -693,6 +692,7 @@ export default function JobClient({ job, relatedJobs, companies }: {
                 return null;
               })()}
 
+              {/* Qualifications */}
               {(() => {
                 const qualificationsArray = Array.isArray(job.qualifications) ? job.qualifications : [];
                 if (qualificationsArray.length > 0) {
@@ -717,6 +717,7 @@ export default function JobClient({ job, relatedJobs, companies }: {
                 <AdUnit slot={AD_SLOTS.IN_ARTICLE} format="fluid" layout="in-article" style={{ display: 'block', textAlign: 'center', width: '100%' }} />
               </div>
 
+              {/* Benefits */}
               {(() => {
                 const benefitsArray = Array.isArray(job.benefits) ? job.benefits : [];
                 if (benefitsArray.length > 0) {
@@ -758,6 +759,7 @@ export default function JobClient({ job, relatedJobs, companies }: {
                     </p>
                   )}
                   <div className="space-y-3">
+                    {/* WhatsApp */}
                     {(job.application?.phone || job.application_phone) && (
                       <div>
                         <button
@@ -797,6 +799,7 @@ export default function JobClient({ job, relatedJobs, companies }: {
                       </div>
                     )}
 
+                    {/* Email */}
                     {(job.application?.email || job.application_email) && (
                       <div>
                         <button
@@ -835,6 +838,7 @@ export default function JobClient({ job, relatedJobs, companies }: {
                       </div>
                     )}
 
+                    {/* Link */}
                     {(job.application?.link || job.application?.url || job.application_url) && (
                       <div>
                         <button
@@ -875,8 +879,6 @@ export default function JobClient({ job, relatedJobs, companies }: {
                 </div>
               )}
 
-              {/* No "Apply for Me" on gulf.jobmeter.app */}
-
               <div className="bg-white rounded-xl shadow-sm p-6">
                 <h2 className="text-xl font-semibold mb-4 text-gray-900">Join Our Communities</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -903,6 +905,7 @@ export default function JobClient({ job, relatedJobs, companies }: {
                 </div>
               </div>
 
+              {/* Accordion context info */}
               {((job.about_role && job.about_role.trim()) ||
                 (job.who_apply && job.who_apply.trim()) ||
                 (job.standout && job.standout.trim())) && (
@@ -941,6 +944,7 @@ export default function JobClient({ job, relatedJobs, companies }: {
                 </div>
               )}
 
+              {/* Posted Date Info */}
               {(job.posted_date || job.created_at) && (
                 <div className="bg-white rounded-xl shadow-sm p-6">
                   <h2 className="text-xl font-semibold mb-3 text-gray-900">Posted Date</h2>
@@ -1012,6 +1016,7 @@ export default function JobClient({ job, relatedJobs, companies }: {
                 <AdUnit slot={AD_SLOTS.SIDEBAR_MOBILE} format="fluid" layoutKey="-fb+5w+4e-db+86" style={{ display: 'block', width: '100%' }} />
               </div>
 
+              {/* Related/Similar Jobs Listings */}
               {similarJobs && similarJobs.length > 0 && (
                 <div className="bg-white rounded-xl shadow-sm overflow-hidden">
                   <div className="px-5 py-4 text-white font-semibold text-base" style={{ backgroundColor: theme.colors.primary.DEFAULT }}>
@@ -1020,7 +1025,7 @@ export default function JobClient({ job, relatedJobs, companies }: {
                   <div className="px-5 py-4">
                     <div className="space-y-4">
                       {similarJobs.map((similarJob) => (
-                        <a key={similarJob.id} href={`/jobs/${similarJob.slug || similarJob.id}`} className="block group">
+                        <a key={similarJob.id} href={`https://jobmeter.app/jobs/${similarJob.slug || similarJob.id}`} className="block group">
                           <div className="flex items-start gap-3 pb-4 border-b border-gray-100 last:border-0 last:pb-0 hover:bg-gray-50 -mx-2 px-2 py-2 rounded-lg transition-colors">
                             <div className="flex-shrink-0 w-1.5 h-1.5 rounded-full mt-2 group-hover:scale-150 transition-transform" style={{ backgroundColor: theme.colors.primary.DEFAULT }}></div>
                             <div className="flex-1 min-w-0">
@@ -1048,7 +1053,7 @@ export default function JobClient({ job, relatedJobs, companies }: {
                       ))}
                     </div>
                     <div className="mt-5 pt-4 border-t border-gray-200">
-                      <a href="/jobs" className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium text-white transition-all hover:opacity-90 hover:shadow-md" style={{ backgroundColor: theme.colors.primary.DEFAULT }}>
+                      <a href="https://jobmeter.app/jobs" className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium text-white transition-all hover:opacity-90 hover:shadow-md" style={{ backgroundColor: theme.colors.primary.DEFAULT }}>
                         <ExternalLink size={16} />
                         View all jobs
                       </a>
@@ -1158,8 +1163,6 @@ export default function JobClient({ job, relatedJobs, companies }: {
             currentCredits={upgradeErrorData?.currentCredits}
           />
         )}
-
-        {/* No TimedJobPopup on gulf.jobmeter.app */}
 
       </div>
     </>
