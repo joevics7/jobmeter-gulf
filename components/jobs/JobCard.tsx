@@ -378,7 +378,7 @@ export default function JobCard({
                 ) : (
                   <>
                     <FileCheck size={16} />
-                    Apply Now
+                    Quick Apply
                   </>
                 )}
               </button>

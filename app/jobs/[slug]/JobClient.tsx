@@ -776,7 +776,7 @@ export default function JobClient({ job, relatedJobs, companies }: {
                     )}
 
                     {/* WhatsApp */}
-                    {(job.application?.phone || job.application_phone) && (
+                    {!job.apply_in_app && (job.application?.phone || job.application_phone) && (
                       <div>
                         <button
                           onClick={() => setShowPhone(v => !v)}
@@ -816,7 +816,7 @@ export default function JobClient({ job, relatedJobs, companies }: {
                     )}
 
                     {/* Email */}
-                    {(job.application?.email || job.application_email) && (
+                    {!job.apply_in_app && (job.application?.email || job.application_email) && (
                       <div>
                         <button
                           onClick={() => setShowEmail(v => !v)}
@@ -855,7 +855,7 @@ export default function JobClient({ job, relatedJobs, companies }: {
                     )}
 
                     {/* Link */}
-                    {(job.application?.link || job.application?.url || job.application_url) && (
+                    {!job.apply_in_app && (job.application?.link || job.application?.url || job.application_url) && (
                       <div>
                         <button
                           onClick={() => setShowUrl(v => !v)}

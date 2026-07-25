@@ -290,8 +290,8 @@ export default function SubmitJobPage() {
       return;
     }
 
-    if (!jobData.applicationUrl.trim() && !jobData.applicationEmail.trim() && !jobData.applicationPhone.trim()) {
-      alert('Please provide at least one application method (Email, URL, or Phone).');
+    if (!applyInApp && !jobData.applicationUrl.trim() && !jobData.applicationEmail.trim() && !jobData.applicationPhone.trim()) {
+      alert('Please provide at least one application method (Email, URL, or Phone), or enable "Let candidates apply directly on JobMeter" below.');
       return;
     }
 
@@ -696,8 +696,12 @@ Posted Date: ${new Date().toISOString().split('T')[0]}`;
 
             {/* Application Details */}
             <section className="bg-white rounded-xl p-6 shadow-sm">
-              <h2 className="text-xl font-bold mb-2 text-gray-900">Application Details *</h2>
-              <p className="text-sm text-gray-600 mb-4">Provide at least one application method</p>
+              <h2 className="text-xl font-bold mb-2 text-gray-900">Application Details{applyInApp ? '' : ' *'}</h2>
+              <p className="text-sm text-gray-600 mb-4">
+                {applyInApp
+                  ? 'Optional — candidates will apply directly on JobMeter, but you can still list these as backup contact methods'
+                  : 'Provide at least one application method'}
+              </p>
               
               <div className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
