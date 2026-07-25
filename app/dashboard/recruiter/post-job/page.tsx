@@ -59,7 +59,7 @@ export default function RecruiterPostJobPage() {
     const init = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        router.push('/auth/recruiter?redirect=/dashboard/recruiter/post-job');
+        router.push('/auth?redirect=/dashboard/recruiter/post-job');
         return;
       }
       setUserId(session.user.id);
