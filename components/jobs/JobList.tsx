@@ -1102,32 +1102,13 @@ export default function JobList({ siteType = 'gulf', initialJobs, initialCountry
                   defaultValue=""
                   onChange={(e) => {
                     const v = e.target.value;
-                    const internalCountries = new Set(['UAE', 'Saudi Arabia', 'Kuwait', 'Qatar', 'Bahrain', 'Oman', 'Jordan', 'Egypt', 'Lebanon']);
-                    if (internalCountries.has(v)) {
-                      // Filter job list by country
-                      setFilters(prev => ({ ...prev, country: v }));
-                      return;
-                    }
                     if (v === '' || v === 'All') {
                       setFilters(prev => ({ ...prev, country: '' }));
                       return;
                     }
-                    // Nigeria — external new tab
-                    if (v === 'Nigeria') { window.open('https://jobmeter.app/jobs', '_blank', 'noopener,noreferrer'); return; }
-                    // Global — external new tab
-                    const globalRoutes: Record<string, string> = {
-                      'Global': 'https://jobmeter.app/jobs',
-                      'United States': 'https://jobmeter.app/jobs?search=United+States',
-                      'United Kingdom': 'https://jobmeter.app/jobs?search=United+Kingdom',
-                      'Canada': 'https://jobmeter.app/jobs?search=Canada',
-                      'Australia': 'https://jobmeter.app/jobs?search=Australia',
-                      'Germany': 'https://jobmeter.app/jobs?search=Germany',
-                      'France': 'https://jobmeter.app/jobs?search=France',
-                      'Netherlands': 'https://jobmeter.app/jobs?search=Netherlands',
-                      'Ireland': 'https://jobmeter.app/jobs?search=Ireland',
-                    };
-                    const url = globalRoutes[v];
-                    if (url) window.open(url, '_blank', 'noopener,noreferrer');
+                    // Redirect-to-jobmeter.app for Nigeria/Global/etc. temporarily removed
+                    // per request — every country now just filters locally instead.
+                    setFilters(prev => ({ ...prev, country: v }));
                   }}
                   className="w-full px-2 py-2.5 rounded-lg border cursor-pointer font-medium text-sm"
                   style={{ backgroundColor: theme.colors.primary.DEFAULT + '10', borderColor: theme.colors.primary.DEFAULT, color: theme.colors.text.primary, height: '42px' }}
