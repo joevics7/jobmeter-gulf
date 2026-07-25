@@ -908,7 +908,7 @@ export default function JobList({ siteType = 'gulf', initialJobs, initialCountry
   return (
     <>
       <OrganizationSchema />
-      <WebSiteSchema searchAction={{ target: 'https://jobmeter.app/?q={search_term_string}', queryInput: 'required name=search_term_string' }} />
+      <WebSiteSchema searchAction={{ target: 'https://gulf.jobmeter.app/jobs?search={search_term_string}', queryInput: 'required name=search_term_string' }} />
 
       <div className="min-h-screen" style={{ backgroundColor: theme.colors.background.muted }}>
 
