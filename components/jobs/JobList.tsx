@@ -494,7 +494,7 @@ export default function JobList({ siteType = 'gulf', initialJobs, initialCountry
         }
       }
 
-      const JOBS_API_URL = 'https://jobs-api.joevicspro.workers.dev/jobs-gulf';
+      const JOBS_API_URL = 'https://jobs-api.joevicspro.workers.dev/jobs';
       const res = await fetch(JOBS_API_URL);
       if (!res.ok) throw new Error(`Jobs API error: ${res.status}`);
       const { jobs: allData, cacheVersion } = await res.json();
@@ -541,7 +541,7 @@ export default function JobList({ siteType = 'gulf', initialJobs, initialCountry
         } catch { }
       }
 
-      const JOBS_API_URL = 'https://jobs-api.joevicspro.workers.dev/jobs-gulf';
+      const JOBS_API_URL = 'https://jobs-api.joevicspro.workers.dev/jobs';
       const res = await fetch(JOBS_API_URL);
       if (!res.ok) throw new Error(`Jobs API error: ${res.status}`);
       const { jobs: data } = await res.json();
@@ -572,7 +572,7 @@ export default function JobList({ siteType = 'gulf', initialJobs, initialCountry
     if (!authChecked) return;
     if (latestFetchedRef.current) return;
     latestFetchedRef.current = true;
-    fetchLatestJobs(); // always fetch from https://jobs-api.joevicspro.workers.dev/jobs-gulf
+    fetchLatestJobs(); // always fetch from https://jobs-api.joevicspro.workers.dev/jobs
   }, [authChecked]);
 
   // ── Fetch matches trigger ───────────────────────────────────────────────────
