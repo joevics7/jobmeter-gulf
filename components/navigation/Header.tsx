@@ -8,7 +8,7 @@ import { theme } from '@/lib/theme';
 
 const navItems = [
   { label: 'Jobs', href: '/jobs', icon: Briefcase },
-  { label: 'Post Job', href: '/dashboard/recruiter/post-job', icon: Send },
+  { label: 'Post Job', href: '/submit', icon: Send },
   { label: 'Saved', href: '/saved', icon: Bookmark },
   { label: 'Tools', href: '/tools', icon: Wrench },
   { label: 'Resources', href: '/resource', icon: BookOpen },

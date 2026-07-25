@@ -201,33 +201,13 @@ export default function SettingsPage() {
     );
   }
 
-  // ── Apply for Me links — always show all 3 to logged-in users ─────────────
-  // Each page guards itself: submit requires payment, dashboard requires submission
-  const applyLinks = [
-    {
-      href: '/apply-for-me',
-      icon: <Briefcase size={18} style={{ color: theme.colors.accent.gold }} />,
-      label: 'Apply for Me',
-      desc: 'Learn about the service and get started',
-    },
-    {
-      href: '/apply-for-me/submit',
-      icon: <Send size={18} style={{ color: theme.colors.accent.gold }} />,
-      label: 'Submit Your Details',
-      desc: 'Provide your Gmail and WhatsApp to activate',
-    },
-    {
-      href: '/apply-for-me/dashboard',
-      icon: <LayoutDashboard size={18} style={{ color: theme.colors.accent.gold }} />,
-      label: 'My Dashboard',
-      desc: 'Track jobs applied on your behalf',
-    },
-  ];
+  // ── Apply for Me — hidden per request, kept here in case it's reinstated ──
+  const applyLinks: { href: string; icon: JSX.Element; label: string; desc: string }[] = [];
 
   // ── Employer links — logged-in users only, any account type ────────────
   const employerLinks = [
     {
-      href: '/dashboard/recruiter/post-job',
+      href: '/submit',
       icon: <PlusCircle size={18} style={{ color: theme.colors.primary.DEFAULT }} />,
       label: 'Post a Job',
       desc: 'Submit a job for review — company optional',
@@ -400,8 +380,8 @@ export default function SettingsPage() {
           </div>
         )}
 
-        {/* ── Apply for Me — only shown to logged-in users ── */}
-        {user && (
+        {/* ── Apply for Me — hidden per request (see applyLinks above) ── */}
+        {user && applyLinks.length > 0 && (
           <div className="mb-6">
             <h2 className="text-base font-semibold mb-2 px-1 text-gray-700">Services</h2>
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
