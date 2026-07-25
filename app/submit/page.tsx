@@ -73,6 +73,9 @@ export default function SubmitJobPage() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [pastedContent, setPastedContent] = useState('');
   const [submissionNotes, setSubmissionNotes] = useState('');
+  const [applyInApp, setApplyInApp] = useState(false);
+  const [screeningEnabled, setScreeningEnabled] = useState(false);
+  const [screeningIncludesWritten, setScreeningIncludesWritten] = useState(false);
   const [jobData, setJobData] = useState({
     title: '',
     sector: '',
@@ -102,7 +105,7 @@ export default function SubmitJobPage() {
     const checkUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        router.push('/auth/recruiter?redirect=/submit');
+        router.push('/auth?redirect=/submit');
         return;
       }
       setUser(user);
@@ -118,8 +121,6 @@ export default function SubmitJobPage() {
       if (userCompanies && userCompanies.length > 0) {
         setCompanies(userCompanies);
         setSelectedCompanyId(userCompanies[0].id);
-      } else {
-        setShowAddCompany(true);
       }
     };
     checkUser();
@@ -127,6 +128,27 @@ export default function SubmitJobPage() {
 
   const generateSlug = (name: string): string => {
     return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  };
+
+  // The submit-job edge function doesn't know about apply_in_app/screening fields
+  // (they didn't exist when it was written, and we can't edit it from here) — so
+  // this is a follow-up patch onto the row it just created, matched by most-recent
+  // submission for this user. Only called when applyInApp is actually turned on.
+  const attachScreeningConfig = async (userId: string) => {
+    try {
+      await fetch('/api/recruiter/attach-screening-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          applyInApp,
+          screeningEnabled: applyInApp && screeningEnabled,
+          screeningIncludesWritten: applyInApp && screeningEnabled && screeningIncludesWritten,
+        }),
+      });
+    } catch (e) {
+      console.error('Failed to attach screening config:', e);
+    }
   };
 
   const handleAddCompany = async (e: React.FormEvent) => {
@@ -329,10 +351,13 @@ Posted Date: ${new Date().toISOString().split('T')[0]}`;
           submissionMethod: 'form',
           submissionNotes: submissionNotes.trim() || undefined,
           userId: user?.id,
-          companyId: postAnonymously ? null : selectedCompanyId,
-          companyName: postAnonymously ? 'Anonymous' : companyName,
-          companyWebsite: postAnonymously ? null : (selectedCompany?.website_url || null),
-          postAnonymously: postAnonymously,
+          companyId: (postAnonymously || !selectedCompanyId) ? null : selectedCompanyId,
+          companyName: (postAnonymously || !selectedCompanyId) ? 'Confidential Employer' : companyName,
+          companyWebsite: (postAnonymously || !selectedCompanyId) ? null : (selectedCompany?.website_url || null),
+          postAnonymously: postAnonymously || !selectedCompanyId,
+          applyInApp,
+          screeningEnabled: applyInApp && screeningEnabled,
+          screeningIncludesWritten: applyInApp && screeningEnabled && screeningIncludesWritten,
         }),
       });
 
@@ -340,6 +365,10 @@ Posted Date: ${new Date().toISOString().split('T')[0]}`;
 
       if (!response.ok) {
         throw new Error(result.error || 'Failed to submit job');
+      }
+
+      if (applyInApp && user) {
+        await attachScreeningConfig(user.id);
       }
 
       setShowSuccessModal(true);
@@ -375,8 +404,11 @@ Posted Date: ${new Date().toISOString().split('T')[0]}`;
           submissionMethod: 'paste',
           submissionNotes: submissionNotes.trim() || undefined,
           userId: user?.id,
-          companyId: postAnonymously ? null : selectedCompanyId,
-          postAnonymously: postAnonymously,
+          companyId: (postAnonymously || !selectedCompanyId) ? null : selectedCompanyId,
+          postAnonymously: postAnonymously || !selectedCompanyId,
+          applyInApp,
+          screeningEnabled: applyInApp && screeningEnabled,
+          screeningIncludesWritten: applyInApp && screeningEnabled && screeningIncludesWritten,
         }),
       });
 
@@ -384,6 +416,10 @@ Posted Date: ${new Date().toISOString().split('T')[0]}`;
 
       if (!response.ok) {
         throw new Error(result.error || 'Failed to submit job');
+      }
+
+      if (applyInApp && user) {
+        await attachScreeningConfig(user.id);
       }
 
       setShowSuccessModal(true);
@@ -746,6 +782,46 @@ Posted Date: ${new Date().toISOString().split('T')[0]}`;
         )}
       </div>
 
+      {/* Apply in-app / Screening quiz — shared across form + paste tabs */}
+      <div className="px-4 pb-4">
+        <section className="bg-white rounded-xl p-6 shadow-sm space-y-3">
+          <h2 className="text-xl font-bold mb-1 text-gray-900">Applications</h2>
+          <label className="flex items-center gap-2 text-sm text-gray-700">
+            <input
+              type="checkbox"
+              checked={applyInApp}
+              onChange={(e) => {
+                setApplyInApp(e.target.checked);
+                if (!e.target.checked) setScreeningEnabled(false);
+              }}
+            />
+            Let candidates apply directly on JobMeter
+          </label>
+          {applyInApp && (
+            <>
+              <label className="flex items-center gap-2 text-sm text-gray-700 pl-6">
+                <input
+                  type="checkbox"
+                  checked={screeningEnabled}
+                  onChange={(e) => setScreeningEnabled(e.target.checked)}
+                />
+                Add a screening quiz (paid add-on — candidates must pass before applying)
+              </label>
+              {screeningEnabled && (
+                <label className="flex items-center gap-2 text-sm text-gray-700 pl-12">
+                  <input
+                    type="checkbox"
+                    checked={screeningIncludesWritten}
+                    onChange={(e) => setScreeningIncludesWritten(e.target.checked)}
+                  />
+                  Include written questions (AI-graded)
+                </label>
+              )}
+            </>
+          )}
+        </section>
+      </div>
+
       {/* Company Section - Bottom */}
       <div className="px-4 pb-24">
         <section className="bg-white rounded-xl p-6 shadow-sm">
@@ -755,40 +831,52 @@ Posted Date: ${new Date().toISOString().split('T')[0]}`;
             <div className="p-4 bg-gray-50 rounded-lg text-center">
               Loading companies...
             </div>
-            ) : !showAddCompany && companies.length > 0 ? (
+          ) : !showAddCompany ? (
             <div className="space-y-4">
-              <div className="flex gap-2">
-                <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-900 mb-1">Select Company</label>
-                  <select
-                    value={selectedCompanyId}
-                    onChange={(e) => {
-                      setSelectedCompanyId(e.target.value);
-                      setPostAnonymously(false);
-                    }}
-                    className="w-full h-10 rounded-md border border-gray-300 px-3 py-2 text-sm"
+              {companies.length > 0 && (
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium text-gray-900 mb-1">Select Company</label>
+                    <select
+                      value={selectedCompanyId}
+                      onChange={(e) => {
+                        setSelectedCompanyId(e.target.value);
+                        setPostAnonymously(false);
+                      }}
+                      className="w-full h-10 rounded-md border border-gray-300 px-3 py-2 text-sm"
+                    >
+                      {companies.map((company) => (
+                        <option key={company.id} value={company.id}>
+                          {company.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <button
+                    onClick={() => setShowAddCompany(true)}
+                    className="mt-6 px-4 py-2 bg-blue-600 text-white rounded-md flex items-center gap-2 hover:bg-blue-700"
                   >
-                    {companies.map((company) => (
-                      <option key={company.id} value={company.id}>
-                        {company.name}
-                      </option>
-                    ))}
-                  </select>
+                    <Plus size={18} />
+                    Add Company
+                  </button>
                 </div>
+              )}
+
+              {companies.length === 0 && (
                 <button
                   onClick={() => setShowAddCompany(true)}
-                  className="mt-6 px-4 py-2 bg-blue-600 text-white rounded-md flex items-center gap-2 hover:bg-blue-700"
+                  className="w-full px-4 py-2.5 bg-blue-600 text-white rounded-md flex items-center justify-center gap-2 hover:bg-blue-700"
                 >
                   <Plus size={18} />
-                  Add Company
+                  Add a Company (optional)
                 </button>
-              </div>
-              
-              {/* Anonymous Posting Option */}
+              )}
+
+              {/* Anonymous / No-Company Posting Option — available even with zero companies on file */}
               <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
                 <input
                   type="checkbox"
-                  checked={postAnonymously}
+                  checked={postAnonymously || (companies.length === 0 && !selectedCompanyId)}
                   onChange={(e) => {
                     setPostAnonymously(e.target.checked);
                     if (e.target.checked) {
@@ -798,8 +886,8 @@ Posted Date: ${new Date().toISOString().split('T')[0]}`;
                   className="w-4 h-4 text-blue-600 rounded"
                 />
                 <div>
-                  <span className="font-medium text-gray-900">Post Anonymously</span>
-                  <p className="text-xs text-gray-500">Your company name will not be shown to job seekers</p>
+                  <span className="font-medium text-gray-900">Post without a company name</span>
+                  <p className="text-xs text-gray-500">Shown to job seekers as a confidential employer</p>
                 </div>
               </label>
             </div>
@@ -807,12 +895,19 @@ Posted Date: ${new Date().toISOString().split('T')[0]}`;
             <div>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold text-gray-900">Add New Company</h3>
-                {companies.length > 0 && (
+                {(companies.length > 0) ? (
                   <button
                     onClick={() => setShowAddCompany(false)}
                     className="text-sm text-blue-600 hover:text-blue-700"
                   >
                     Select existing company
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => { setShowAddCompany(false); setPostAnonymously(true); }}
+                    className="text-sm text-blue-600 hover:text-blue-700"
+                  >
+                    Skip — post without a company
                   </button>
                 )}
               </div>
