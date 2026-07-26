@@ -13,7 +13,7 @@ const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const COMPANIES_URL = 'https://jobs-api.joevicspro.workers.dev/companies';
 
 // ─── Table for this site ──────────────────────────────────────────────────────
-const JOBS_TABLE = 'jobs_gulf';
+const JOBS_TABLE = 'jobs'; // temporarily switched from 'jobs_gulf' (0 rows) — see conversation notes
 
 // ─── Gulf country identifiers ─────────────────────────────────────────────────
 const GULF_COUNTRY_CODES = new Set([

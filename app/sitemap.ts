@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { MetadataRoute } from 'next';
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.gulf.jobmeter.app';
-const JOBS_TABLE = 'jobs_gulf';
+const JOBS_TABLE = 'jobs'; // temporarily switched from 'jobs_gulf' (0 rows) — see conversation notes
 const JOBS_PER_SITEMAP = 1000;
 
 /**

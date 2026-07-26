@@ -106,6 +106,7 @@ function transformJobToUIStatic(job: any): JobUI {
       : undefined,
     sector: job.sector || '', role_category: job.role_category || '',
     description: job.description || job.job_description || '',
+    apply_in_app: !!job.apply_in_app, screening_enabled: !!job.screening_enabled,
   };
 }
 
@@ -702,6 +703,7 @@ export default function JobList({ siteType = 'gulf', initialJobs, initialCountry
       breakdown: finalBreakdown, postedDate: getRelativeTime(job.posted_date || job.created_at),
       sector: job.sector || '', role_category: job.role_category || '',
       description: job.description || job.job_description || '',
+      apply_in_app: !!job.apply_in_app, screening_enabled: !!job.screening_enabled,
     };
   };
 
