@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { ArrowLeft, FileText, Clipboard, Plus, Building2, X, CheckCircle, AlertCircle, Sparkles } from 'lucide-react';
+import { ArrowLeft, FileText, Clipboard, Plus, Building2, X, CheckCircle, AlertCircle, Sparkles, Lock } from 'lucide-react';
+import UpgradeModal from '@/components/jobs/UpgradeModal';
 import { theme } from '@/lib/theme';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,6 +40,7 @@ const SECTORS = [
 ];
 
 const EMPLOYMENT_TYPES = ['Full-time', 'Part-time', 'Contract', 'Freelance', 'Internship'];
+const ANONYMOUS_OPTION = '__anonymous__';
 const EXPERIENCE_LEVELS = ['Entry Level', 'Junior', 'Mid-level', 'Senior', 'Lead', 'Executive'];
 
 export default function SubmitJobPage() {
@@ -74,8 +76,16 @@ export default function SubmitJobPage() {
   const [pastedContent, setPastedContent] = useState('');
   const [submissionNotes, setSubmissionNotes] = useState('');
   const [applyInApp, setApplyInApp] = useState(true);
-  const [screeningEnabled, setScreeningEnabled] = useState(false);
-  const [screeningIncludesWritten, setScreeningIncludesWritten] = useState(false);
+  const [quizObjective, setQuizObjective] = useState(false);
+  const [quizSpeed, setQuizSpeed] = useState(false);
+  const [quizWritten, setQuizWritten] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showQuizUpgradeModal, setShowQuizUpgradeModal] = useState(false);
+  // Derived from the 3 checkboxes above — kept as plain values (not state) so
+  // there's only ever one source of truth.
+  const screeningEnabled = quizObjective || quizSpeed || quizWritten;
+  const screeningMode: 'standard' | 'speed' = quizSpeed ? 'speed' : 'standard';
+  const screeningIncludesWritten = quizWritten;
   const [jobData, setJobData] = useState({
     title: '',
     sector: '',
@@ -109,7 +119,14 @@ export default function SubmitJobPage() {
         return;
       }
       setUser(user);
-      
+
+      supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+        .then(({ data }) => setIsAdmin(data?.role === 'admin'));
+
       const { data: userCompanies } = await supabase
         .from('companies')
         .select('id, name, slug, industry')
@@ -143,6 +160,7 @@ export default function SubmitJobPage() {
           userId,
           applyInApp,
           screeningEnabled: applyInApp && screeningEnabled,
+          screeningMode,
           screeningIncludesWritten: applyInApp && screeningEnabled && screeningIncludesWritten,
         }),
       });
@@ -803,7 +821,7 @@ Posted Date: ${new Date().toISOString().split('T')[0]}`;
 
       {/* Apply in-app / Screening quiz — shared across form + paste tabs */}
       <div className="px-4 pb-4">
-        <section className="bg-white rounded-xl p-6 shadow-sm space-y-3">
+        <section className="bg-white rounded-2xl p-6 sm:p-7 shadow-sm border border-gray-100 space-y-3">
           <h2 className="text-xl font-bold mb-1 text-gray-900">Applications</h2>
           <label className="flex items-center gap-2 text-sm text-gray-700">
             <input
@@ -812,7 +830,9 @@ Posted Date: ${new Date().toISOString().split('T')[0]}`;
               onChange={(e) => {
                 setApplyInApp(e.target.checked);
                 if (!e.target.checked) {
-                  setScreeningEnabled(false);
+                  setQuizObjective(false);
+                  setQuizSpeed(false);
+                  setQuizWritten(false);
                   // Anonymous/no-company posting is only allowed for in-app applications —
                   // if this gets turned off, a real company becomes required.
                   setPostAnonymously(false);
@@ -821,30 +841,63 @@ Posted Date: ${new Date().toISOString().split('T')[0]}`;
             />
             Let candidates apply directly on JobMeter
           </label>
+
           {applyInApp && (
-            <>
-              <label className="flex items-center gap-2 text-sm text-gray-700 pl-6">
+            <div className="pl-6 pt-1 space-y-2">
+              <p className="text-sm font-medium text-gray-900">
+                Screening quiz <span className="text-xs font-normal text-gray-500">— paid feature, candidates must pass before applying</span>
+              </p>
+
+              {/* Objective / Speed are two variants of the same MCQ pool — mutually exclusive */}
+              <label className="flex items-center gap-2 text-sm text-gray-700">
                 <input
                   type="checkbox"
-                  checked={screeningEnabled}
-                  onChange={(e) => setScreeningEnabled(e.target.checked)}
+                  checked={quizObjective}
+                  onChange={(e) => {
+                    if (e.target.checked && !isAdmin) { setShowQuizUpgradeModal(true); return; }
+                    setQuizObjective(e.target.checked);
+                    if (e.target.checked) setQuizSpeed(false);
+                  }}
                 />
-                Add a screening quiz (paid add-on — candidates must pass before applying)
+                Objective quiz
+                {!isAdmin && <Lock size={12} className="text-gray-400" />}
               </label>
-              {screeningEnabled && (
-                <label className="flex items-center gap-2 text-sm text-gray-700 pl-12">
-                  <input
-                    type="checkbox"
-                    checked={screeningIncludesWritten}
-                    onChange={(e) => setScreeningIncludesWritten(e.target.checked)}
-                  />
-                  Include written questions (AI-graded)
-                </label>
-              )}
-            </>
+              <label className="flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={quizSpeed}
+                  onChange={(e) => {
+                    if (e.target.checked && !isAdmin) { setShowQuizUpgradeModal(true); return; }
+                    setQuizSpeed(e.target.checked);
+                    if (e.target.checked) setQuizObjective(false);
+                  }}
+                />
+                Speed quiz
+                {!isAdmin && <Lock size={12} className="text-gray-400" />}
+              </label>
+              <label className="flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={quizWritten}
+                  onChange={(e) => {
+                    if (e.target.checked && !isAdmin) { setShowQuizUpgradeModal(true); return; }
+                    setQuizWritten(e.target.checked);
+                  }}
+                />
+                Written quiz <span className="text-xs text-gray-500">(AI-graded)</span>
+                {!isAdmin && <Lock size={12} className="text-gray-400" />}
+              </label>
+            </div>
           )}
         </section>
       </div>
+
+      <UpgradeModal
+        isOpen={showQuizUpgradeModal}
+        onClose={() => setShowQuizUpgradeModal(false)}
+        errorType="PREMIUM_REQUIRED"
+        message="Screening quizzes are a paid feature. Upgrade your account to add one to your job posting."
+      />
 
       {/* Company Section - Bottom */}
       <div className="px-4 pb-24">
@@ -857,15 +910,20 @@ Posted Date: ${new Date().toISOString().split('T')[0]}`;
             </div>
           ) : !showAddCompany ? (
             <div className="space-y-4">
-              {companies.length > 0 && (
+              {companies.length > 0 ? (
                 <div className="flex gap-2">
                   <div className="flex-1">
                     <label className="block text-sm font-medium text-gray-900 mb-1">Select Company</label>
                     <select
-                      value={selectedCompanyId}
+                      value={postAnonymously ? ANONYMOUS_OPTION : selectedCompanyId}
                       onChange={(e) => {
-                        setSelectedCompanyId(e.target.value);
-                        setPostAnonymously(false);
+                        if (e.target.value === ANONYMOUS_OPTION) {
+                          setPostAnonymously(true);
+                          setSelectedCompanyId('');
+                        } else {
+                          setPostAnonymously(false);
+                          setSelectedCompanyId(e.target.value);
+                        }
                       }}
                       className="w-full h-10 rounded-md border border-gray-300 px-3 py-2 text-sm"
                     >
@@ -874,7 +932,15 @@ Posted Date: ${new Date().toISOString().split('T')[0]}`;
                           {company.name}
                         </option>
                       ))}
+                      {/* Anonymous posting only available for in-app applications, and only
+                          once at least one real company is on file (see conversation notes). */}
+                      {applyInApp && (
+                        <option value={ANONYMOUS_OPTION}>— Post Anonymously —</option>
+                      )}
                     </select>
+                    {postAnonymously && (
+                      <p className="text-xs text-gray-500 mt-1">Shown to job seekers as a confidential employer</p>
+                    )}
                   </div>
                   <button
                     onClick={() => setShowAddCompany(true)}
@@ -884,64 +950,33 @@ Posted Date: ${new Date().toISOString().split('T')[0]}`;
                     Add Company
                   </button>
                 </div>
-              )}
-
-              {companies.length === 0 && (
-                <button
-                  onClick={() => setShowAddCompany(true)}
-                  className="w-full px-4 py-2.5 bg-blue-600 text-white rounded-md flex items-center justify-center gap-2 hover:bg-blue-700"
-                >
-                  <Plus size={18} />
-                  {applyInApp ? 'Add a Company (optional)' : 'Add a Company'}
-                </button>
-              )}
-
-              {/* Anonymous / No-Company posting — only available for in-app applications.
-                  Anyone using an external link/email/phone must have a real company on file. */}
-              {applyInApp && (
-                <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
-                  <input
-                    type="checkbox"
-                    checked={postAnonymously || (companies.length === 0 && !selectedCompanyId)}
-                    onChange={(e) => {
-                      setPostAnonymously(e.target.checked);
-                      if (e.target.checked) {
-                        setSelectedCompanyId('');
-                      }
-                    }}
-                    className="w-4 h-4 text-blue-600 rounded"
-                  />
-                  <div>
-                    <span className="font-medium text-gray-900">Post without a company name</span>
-                    <p className="text-xs text-gray-500">Shown to job seekers as a confidential employer</p>
-                  </div>
-                </label>
-              )}
-              {!applyInApp && companies.length === 0 && (
-                <p className="text-xs text-gray-500 px-1">
-                  Posting with an external link, email, or phone number requires a company name.
-                </p>
+              ) : (
+                <>
+                  <button
+                    onClick={() => setShowAddCompany(true)}
+                    className="w-full px-4 py-2.5 bg-blue-600 text-white rounded-md flex items-center justify-center gap-2 hover:bg-blue-700"
+                  >
+                    <Plus size={18} />
+                    Add a Company
+                  </button>
+                  <p className="text-xs text-gray-500 px-1">
+                    Add at least one company to unlock posting anonymously.
+                  </p>
+                </>
               )}
             </div>
           ) : (
             <div>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold text-gray-900">Add New Company</h3>
-                {(companies.length > 0) ? (
+                {(companies.length > 0) && (
                   <button
                     onClick={() => setShowAddCompany(false)}
                     className="text-sm text-blue-600 hover:text-blue-700"
                   >
                     Select existing company
                   </button>
-                ) : applyInApp ? (
-                  <button
-                    onClick={() => { setShowAddCompany(false); setPostAnonymously(true); }}
-                    className="text-sm text-blue-600 hover:text-blue-700"
-                  >
-                    Skip — post without a company
-                  </button>
-                ) : null}
+                )}
               </div>
               
               {companyError && (
@@ -1165,29 +1200,56 @@ Posted Date: ${new Date().toISOString().split('T')[0]}`;
       <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
         <DialogContent style={{ backgroundColor: theme.colors.card.DEFAULT, borderColor: theme.colors.border.DEFAULT }}>
           <DialogHeader>
-            <div className="text-center mb-4">
-              <div className="text-5xl mb-4">✅</div>
-              <DialogTitle className="text-2xl font-bold" style={{ color: theme.colors.text.primary }}>
-                Job Submitted
+            <div className="text-center mb-2">
+              <div
+                className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4"
+                style={{ backgroundColor: theme.colors.primary.DEFAULT + '15' }}
+              >
+                <CheckCircle size={28} style={{ color: theme.colors.primary.DEFAULT }} />
+              </div>
+              <DialogTitle className="text-xl font-bold" style={{ color: theme.colors.text.primary }}>
+                Job submitted for review
               </DialogTitle>
               <DialogDescription className="mt-2" style={{ color: theme.colors.text.secondary }}>
-                Your job posting has been submitted for approval.
+                We'll review it shortly and publish it once approved. You can track its status from your jobs list.
               </DialogDescription>
             </div>
           </DialogHeader>
-          <Button
-            onClick={() => {
-              setShowSuccessModal(false);
-              router.push('/jobs');
-            }}
-            className="w-full mt-4"
-            style={{
-              backgroundColor: theme.colors.primary.DEFAULT,
-              color: theme.colors.primary.foreground,
-            }}
-          >
-            Done
-          </Button>
+          <div className="flex flex-col gap-2 mt-2">
+            <Button
+              onClick={() => {
+                setShowSuccessModal(false);
+                router.push('/dashboard/recruiter');
+              }}
+              className="w-full"
+              style={{
+                backgroundColor: theme.colors.primary.DEFAULT,
+                color: theme.colors.primary.foreground,
+              }}
+            >
+              View my jobs
+            </Button>
+            <Button
+              onClick={() => {
+                setShowSuccessModal(false);
+                setJobData({
+                  title: '', sector: '', companyName: '', companyWebsite: '',
+                  city: '', state: '', remote: false, employmentType: '',
+                  skills: '', experienceLevel: '', salaryMin: '', salaryMax: '',
+                  currency: 'NGN', period: 'annually', description: '',
+                  responsibilities: '', qualifications: '', benefits: '',
+                  applicationUrl: '', applicationEmail: '', applicationPhone: '', deadline: '',
+                });
+                setPastedContent('');
+                setSubmissionNotes('');
+                setActiveTab('form');
+              }}
+              variant="outline"
+              className="w-full"
+            >
+              Post another job
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
