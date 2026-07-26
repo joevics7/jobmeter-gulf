@@ -64,6 +64,31 @@ interface JobListProps {
 }
 
 // ── Static transform for SSR seeding (no user/match context) ─────────────────
+// The Cloudflare Worker backing the /jobs listing doesn't know about apply_in_app/
+// screening_enabled at all — those live only in Supabase. This does one supplementary
+// query after the worker fetch to merge them in, so Quick Apply actually shows.
+async function enrichWithApplyInApp(uiJobs: JobUI[]): Promise<JobUI[]> {
+  const ids = uiJobs.map((j) => j.id).filter(Boolean);
+  if (ids.length === 0) return uiJobs;
+  try {
+    const { data, error } = await supabase
+      .from('jobs')
+      .select('id, apply_in_app, screening_enabled')
+      .in('id', ids)
+      .eq('apply_in_app', true);
+    if (error || !data) return uiJobs;
+    const flagMap = new Map(data.map((r: any) => [r.id, r]));
+    return uiJobs.map((j) => {
+      const match = flagMap.get(j.id);
+      return match
+        ? { ...j, apply_in_app: true, screening_enabled: !!match.screening_enabled }
+        : j;
+    });
+  } catch {
+    return uiJobs;
+  }
+}
+
 function transformJobToUIStatic(job: any): JobUI {
   let locationStr = 'Location not specified';
   if (typeof job.location === 'string') { locationStr = job.location; }
@@ -503,11 +528,12 @@ export default function JobList({ siteType = 'gulf', initialJobs, initialCountry
       const allData_raw = (allData || []);
       // Worker already filtered by ?site=gulf
       const allUiJobs = allData_raw.map((job: any) => transformJobToUI(job, 0, null));
-      setLatestJobs(allUiJobs);
+      const enrichedUiJobs = await enrichWithApplyInApp(allUiJobs);
+      setLatestJobs(enrichedUiJobs);
       setCurrentPage(1);
 
       try {
-        sessionStorage.setItem(STORAGE_KEYS.LATEST_JOBS_CACHE, JSON.stringify(allUiJobs));
+        sessionStorage.setItem(STORAGE_KEYS.LATEST_JOBS_CACHE, JSON.stringify(enrichedUiJobs));
         sessionStorage.setItem(STORAGE_KEYS.LATEST_JOBS_CACHE_TS, Date.now().toString());
         sessionStorage.setItem(STORAGE_KEYS.LATEST_JOBS_CACHE_VERSION, siteType);
       } catch (e) {
@@ -549,10 +575,11 @@ export default function JobList({ siteType = 'gulf', initialJobs, initialCountry
       // Worker already filtered by ?site=gulf
       const processedJobs = await processJobsWithMatching(data || []);
       processedJobs.sort((a, b) => (b.calculatedTotal || 0) - (a.calculatedTotal || 0));
+      const enrichedProcessedJobs = await enrichWithApplyInApp(processedJobs);
 
       try {
         const now = Date.now();
-        localStorage.setItem(STORAGE_KEYS.MATCHES_CACHE, JSON.stringify(processedJobs));
+        localStorage.setItem(STORAGE_KEYS.MATCHES_CACHE, JSON.stringify(enrichedProcessedJobs));
         localStorage.setItem(STORAGE_KEYS.MATCHES_CACHE_TS, now.toString());
         localStorage.setItem(STORAGE_KEYS.MATCHES_CACHE_USER, user?.id || '');
         setMatchesCachedAt(now);
@@ -560,7 +587,7 @@ export default function JobList({ siteType = 'gulf', initialJobs, initialCountry
         console.warn('[JobList] localStorage write failed:', e);
       }
 
-      setJobs(processedJobs);
+      setJobs(enrichedProcessedJobs);
     } catch (error) {
       console.error('[JobList] Error fetching matched jobs:', error);
     } finally {

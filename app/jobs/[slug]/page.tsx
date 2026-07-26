@@ -5,7 +5,10 @@ import JobList from '@/components/jobs/JobList'; // Added to handle country brea
 import { Metadata } from 'next';
 import { cache } from 'react';
 
-export const revalidate = false;
+// Was `revalidate = false` (permanently frozen at build time) — that's incompatible
+// with apply_in_app/screening/status changes needing to show up without a full
+// site rebuild each time. 5 minutes balances freshness against still being mostly static.
+export const revalidate = 300;
 export const dynamic = 'force-static';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;

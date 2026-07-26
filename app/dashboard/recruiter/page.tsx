@@ -5,25 +5,20 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { theme } from '@/lib/theme';
-import { Loader2, Users, Plus } from 'lucide-react';
+import { Loader2, Users, Plus, Pencil } from 'lucide-react';
 
 interface RecruiterJob {
-  id: string;
+  submissionId: string;
+  jobId: string | null;
   title: string;
-  status: string;
-  apply_in_app: boolean;
-  screening_enabled: boolean;
-  created_at: string;
-  applicant_count: number;
+  statusLabel: string;
+  statusColor: string;
+  rejectionReason: string | null;
+  screeningEnabled: boolean;
+  applicantCount: number;
+  createdAt: string;
+  canEdit: boolean;
 }
-
-const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  pending_review: { label: 'Pending review', color: '#B45309' },
-  active: { label: 'Live', color: '#16A34A' },
-  rejected: { label: 'Rejected', color: '#DC2626' },
-  expired: { label: 'Expired', color: '#6B7280' },
-  expired_indexed: { label: 'Expired', color: '#6B7280' },
-};
 
 export default function RecruiterDashboardPage() {
   const router = useRouter();
@@ -38,32 +33,9 @@ export default function RecruiterDashboardPage() {
         return;
       }
 
-      const { data: jobsData, error: jobsError } = await supabase
-        .from('jobs')
-        .select('id, title, status, apply_in_app, screening_enabled, created_at')
-        .eq('posted_by_user_id', session.user.id)
-        .order('created_at', { ascending: false });
-
-      if (jobsError || !jobsData) {
-        setLoading(false);
-        return;
-      }
-
-      const jobIds = jobsData.map((j) => j.id);
-      const counts: Record<string, number> = {};
-      if (jobIds.length > 0) {
-        const { data: apps } = await supabase
-          .from('applications')
-          .select('job_id')
-          .in('job_id', jobIds);
-        (apps || []).forEach((a: any) => {
-          counts[a.job_id] = (counts[a.job_id] || 0) + 1;
-        });
-      }
-
-      setJobs(
-        jobsData.map((j: any) => ({ ...j, applicant_count: counts[j.id] || 0 }))
-      );
+      const res = await fetch(`/api/recruiter/my-jobs?userId=${session.user.id}`);
+      const data = await res.json();
+      if (res.ok) setJobs(data.jobs || []);
       setLoading(false);
     };
     init();
@@ -83,7 +55,7 @@ export default function RecruiterDashboardPage() {
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-xl font-semibold text-gray-900">Your jobs</h1>
           <Link
-            href="/dashboard/recruiter/post-job"
+            href="/submit"
             className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-white text-sm font-medium"
             style={{ backgroundColor: theme.colors.primary.DEFAULT }}
           >
@@ -97,43 +69,51 @@ export default function RecruiterDashboardPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {jobs.map((job) => {
-              const statusInfo = STATUS_LABELS[job.status] || { label: job.status, color: '#6B7280' };
-              return (
-                <div
-                  key={job.id}
-                  className="bg-white rounded-xl border border-gray-200 p-5 flex items-center justify-between"
-                >
+            {jobs.map((job) => (
+              <div
+                key={job.submissionId}
+                className="bg-white rounded-xl border border-gray-200 p-5"
+              >
+                <div className="flex items-center justify-between">
                   <div>
                     <h2 className="font-medium text-gray-900">{job.title}</h2>
                     <div className="flex items-center gap-2 mt-1 text-xs">
                       <span
                         className="px-2 py-0.5 rounded-full font-medium"
-                        style={{ backgroundColor: `${statusInfo.color}15`, color: statusInfo.color }}
+                        style={{ backgroundColor: `${job.statusColor}15`, color: job.statusColor }}
                       >
-                        {statusInfo.label}
+                        {job.statusLabel}
                       </span>
-                      {job.apply_in_app && (
-                        <span className="text-gray-500">
-                          {job.screening_enabled ? 'In-app + quiz' : 'In-app apply'}
-                        </span>
-                      )}
+                      <span className="text-gray-500">
+                        {job.screeningEnabled ? 'In-app + quiz' : 'In-app apply'}
+                      </span>
                     </div>
                   </div>
-                  {job.apply_in_app ? (
+                  <div className="flex items-center gap-2">
                     <Link
-                      href={`/dashboard/recruiter/jobs/${job.id}/applicants`}
+                      href={`/dashboard/recruiter/edit/${job.submissionId}`}
                       className="flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-50"
                     >
-                      <Users size={15} />
-                      {job.applicant_count} applicant{job.applicant_count !== 1 ? 's' : ''}
+                      <Pencil size={14} /> Edit
                     </Link>
-                  ) : (
-                    <span className="text-sm text-gray-400">External apply</span>
-                  )}
+                    {job.jobId && (
+                      <Link
+                        href={`/dashboard/recruiter/jobs/${job.jobId}/applicants`}
+                        className="flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-50"
+                      >
+                        <Users size={15} />
+                        {job.applicantCount} applicant{job.applicantCount !== 1 ? 's' : ''}
+                      </Link>
+                    )}
+                  </div>
                 </div>
-              );
-            })}
+                {job.statusLabel === 'Rejected' && job.rejectionReason && (
+                  <p className="text-xs text-red-600 mt-2 bg-red-50 rounded-lg px-3 py-2">
+                    {job.rejectionReason}
+                  </p>
+                )}
+              </div>
+            ))}
           </div>
         )}
       </div>
