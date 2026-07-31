@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.gulf.jobmeter.app';
 const JOBS_TABLE = 'jobs'; // temporarily switched from 'jobs_gulf' (0 rows) — see conversation notes
 const JOBS_PER_SITEMAP = 1000;
+const GULF_COUNTRIES = ['United Arab Emirates', 'Saudi Arabia', 'Kuwait', 'Qatar', 'Bahrain', 'Oman'];
 
 /**
  * Paginated job sitemap
@@ -39,6 +40,7 @@ export async function GET(
       .from(JOBS_TABLE)
       .select('slug, updated_at')
       .in('status', ['active', 'expired_indexed'])
+      .overlaps('country', GULF_COUNTRIES)
       .range(from, to)
       .order('created_at', { ascending: false });
 

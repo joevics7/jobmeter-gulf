@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { mapJobToSchema } from '@/lib/mapJobToSchema';
 import JobClient from './JobClient';
 import JobList from '@/components/jobs/JobList'; // Added to handle country breadcrumb
@@ -18,13 +18,17 @@ const COMPANIES_URL = 'https://jobs-api.joevicspro.workers.dev/companies';
 // ─── Table for this site ──────────────────────────────────────────────────────
 const JOBS_TABLE = 'jobs'; // temporarily switched from 'jobs_gulf' (0 rows) — see conversation notes
 
-// ─── Gulf country identifiers ─────────────────────────────────────────────────
-const GULF_COUNTRY_CODES = new Set([
-  'AE', 'SA', 'KW', 'QA', 'BH', 'OM', 'JO', 'EG', 'LB',
-  'UAE', 'uae', 'united arab emirates',
-  'saudi arabia', 'ksa',
-  'kuwait', 'qatar', 'bahrain', 'oman', 'jordan', 'egypt', 'lebanon',
+// ─── Gulf country scope for this site ─────────────────────────────────────────
+// DB stores full country names ("United Arab Emirates"), not codes/abbreviations
+// like "UAE" or "AE" — the set below previously mixed both and was never actually
+// used anywhere in this file, so it silently matched nothing. Fixed and wired in.
+const GULF_COUNTRIES = new Set([
+  'united arab emirates', 'saudi arabia', 'kuwait', 'qatar', 'bahrain', 'oman',
 ]);
+function isGulfCountryJob(job: any): boolean {
+  const countries: string[] = Array.isArray(job?.country) ? job.country : [];
+  return countries.some((c) => GULF_COUNTRIES.has((c || '').toLowerCase()));
+}
 
 // Map for breadcrumb links to work
 const COUNTRY_MAP: Record<string, string> = {
@@ -137,6 +141,10 @@ export default async function JobPage({ params }: { params: { slug: string } }) 
 
   const job = await getJob(slug);
   if (!job) notFound();
+
+  if (!isGulfCountryJob(job)) {
+    redirect(`https://jobmeter.app/jobs/${slug}`);
+  }
 
   const companiesData = await getCompanies();
   // Minimal fix: Ensure companies is always an array to prevent .find() error

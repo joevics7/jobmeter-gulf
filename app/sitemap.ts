@@ -4,6 +4,7 @@ import { MetadataRoute } from 'next';
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.gulf.jobmeter.app';
 const JOBS_TABLE = 'jobs'; // temporarily switched from 'jobs_gulf' (0 rows) — see conversation notes
 const JOBS_PER_SITEMAP = 1000;
+const GULF_COUNTRIES = ['United Arab Emirates', 'Saudi Arabia', 'Kuwait', 'Qatar', 'Bahrain', 'Oman'];
 
 /**
  * Main sitemap index
@@ -58,7 +59,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const { count, error } = await supabase
       .from(JOBS_TABLE)
       .select('*', { count: 'exact', head: true })
-      .in('status', ['active', 'expired_indexed']);
+      .in('status', ['active', 'expired_indexed'])
+      .overlaps('country', GULF_COUNTRIES);
 
     if (error) {
       console.error('Error counting jobs:', JSON.stringify(error));

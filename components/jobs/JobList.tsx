@@ -53,6 +53,16 @@ const JOBS_PER_PAGE_DISPLAY = 50;
 const CLIENT_CACHE_DURATION = 20 * 60 * 1000;            // 20 min — latest jobs
 const MATCHES_CACHE_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days — match scores
 
+// Only these 6 GCC countries are in scope for gulf.jobmeter.app.
+// NOTE: the DB stores full country names ("United Arab Emirates"), not "UAE" —
+// a prior version of this filter used "UAE" as the value, which never matched
+// any real job (exact-match comparison below, not substring).
+const GULF_COUNTRIES = ['United Arab Emirates', 'Saudi Arabia', 'Kuwait', 'Qatar', 'Bahrain', 'Oman'];
+function isGulfJob(job: JobUI): boolean {
+  const countries = job.country || [];
+  return countries.some((c) => GULF_COUNTRIES.includes(c));
+}
+
 interface JobListProps {
   siteType?: 'nigeria' | 'gulf' | 'global';
   initialJobs?: any[];
@@ -527,7 +537,7 @@ export default function JobList({ siteType = 'gulf', initialJobs, initialCountry
 
       const allData_raw = (allData || []);
       // Worker already filtered by ?site=gulf
-      const allUiJobs = allData_raw.map((job: any) => transformJobToUI(job, 0, null));
+      const allUiJobs = allData_raw.map((job: any) => transformJobToUI(job, 0, null)).filter(isGulfJob);
       const enrichedUiJobs = await enrichWithApplyInApp(allUiJobs);
       setLatestJobs(enrichedUiJobs);
       setCurrentPage(1);
@@ -573,7 +583,7 @@ export default function JobList({ siteType = 'gulf', initialJobs, initialCountry
       if (!res.ok) throw new Error(`Jobs API error: ${res.status}`);
       const { jobs: data } = await res.json();
       // Worker already filtered by ?site=gulf
-      const processedJobs = await processJobsWithMatching(data || []);
+      const processedJobs = (await processJobsWithMatching(data || [])).filter(isGulfJob);
       processedJobs.sort((a, b) => (b.calculatedTotal || 0) - (a.calculatedTotal || 0));
       const enrichedProcessedJobs = await enrichWithApplyInApp(processedJobs);
 
@@ -1135,39 +1145,19 @@ export default function JobList({ siteType = 'gulf', initialJobs, initialCountry
                       setFilters(prev => ({ ...prev, country: '' }));
                       return;
                     }
-                    // Redirect-to-jobmeter.app for Nigeria/Global/etc. temporarily removed
-                    // per request — every country now just filters locally instead.
+                    // Dropdown now only offers the 6 Gulf countries this site covers.
                     setFilters(prev => ({ ...prev, country: v }));
                   }}
                   className="w-full px-2 py-2.5 rounded-lg border cursor-pointer font-medium text-sm"
                   style={{ backgroundColor: theme.colors.primary.DEFAULT + '10', borderColor: theme.colors.primary.DEFAULT, color: theme.colors.text.primary, height: '42px' }}
                 >
                   <option value="" disabled>🌍 Select Country</option>
-                  <optgroup label="🌍 Gulf &amp; Middle East">
-                    <option value="UAE">🇦🇪 UAE</option>
-                    <option value="Saudi Arabia">🇸🇦 Saudi Arabia</option>
-                    <option value="Kuwait">🇰🇼 Kuwait</option>
-                    <option value="Qatar">🇶🇦 Qatar</option>
-                    <option value="Bahrain">🇧🇭 Bahrain</option>
-                    <option value="Oman">🇴🇲 Oman</option>
-                    <option value="Jordan">🇯🇴 Jordan</option>
-                    <option value="Egypt">🇪🇬 Egypt</option>
-                    <option value="Lebanon">🇱🇧 Lebanon</option>
-                  </optgroup>
-                  <optgroup label="🌐 Global / Western">
-                    <option value="Global">🌐 Global</option>
-                    <option value="United States">🇺🇸 United States</option>
-                    <option value="United Kingdom">🇬🇧 United Kingdom</option>
-                    <option value="Canada">🇨🇦 Canada</option>
-                    <option value="Australia">🇦🇺 Australia</option>
-                    <option value="Germany">🇩🇪 Germany</option>
-                    <option value="France">🇫🇷 France</option>
-                    <option value="Netherlands">🇳🇱 Netherlands</option>
-                    <option value="Ireland">🇮🇪 Ireland</option>
-                  </optgroup>
-                  <optgroup label="🇳🇬 Nigeria">
-                    <option value="Nigeria">🇳🇬 Nigeria</option>
-                  </optgroup>
+                  <option value="United Arab Emirates">🇦🇪 UAE</option>
+                  <option value="Saudi Arabia">🇸🇦 Saudi Arabia</option>
+                  <option value="Kuwait">🇰🇼 Kuwait</option>
+                  <option value="Qatar">🇶🇦 Qatar</option>
+                  <option value="Bahrain">🇧🇭 Bahrain</option>
+                  <option value="Oman">🇴🇲 Oman</option>
                 </select>
               </div>
 
